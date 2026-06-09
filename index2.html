@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CITY SWEEP</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --c: #00e5ff;
+                --cdim: #009ab5;
+                --cglow: rgba(0, 229, 255, 0.18);
+                --cfaint: rgba(0, 229, 255, 0.06);
+                --red: #ff4455;
+                --amber: #ffbb00;
+                --dk: #05090c;
+                --dk2: #080f14;
+                --border: #132030;
+                --muted: #2a5060;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                background: var(--dk);
+                color: var(--c);
+                font-family: "Share Tech Mono", "Courier New", monospace;
+                height: 100vh;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            canvas#rain {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 0;
+                opacity: 0.18;
+                pointer-events: none;
+            }
+            .app {
+                position: relative;
+                z-index: 1;
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                overflow: hidden;
+                padding: 8px;
+            }
+            .shell {
+                border: 1.5px solid var(--c);
+                box-shadow:
+                    0 0 28px var(--cglow),
+                    inset 0 0 60px rgba(0, 229, 255, 0.012);
+                background: rgba(5, 9, 12, 0.97);
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                overflow: hidden;
+            }
+            .hdr {
+                text-align: center;
+                padding: 9px 20px 6px;
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+            h1 {
+                font-size: clamp(14px, 2.4vw, 26px);
+                letter-spacing: 10px;
+                text-shadow:
+                    0 0 14px var(--c),
+                    0 0 40px var(--cglow);
+                animation: flicker 7s infinite;
+            }
+            @keyframes flicker {
+                0%,
+                90%,
+                100% {
+                    opacity: 1;
+                }
+                91% {
+                    opacity: 0.5;
+                }
+                92% {
+                    opacity: 1;
+                }
+                93% {
+                    opacity: 0.2;
+                }
+                94% {
+                    opacity: 1;
+                }
+            }
+            .sub {
+                font-size: 8px;
+                letter-spacing: 4px;
+                color: var(--muted);
+                margin-top: 2px;
+            }
+            .stats {
+                display: flex;
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+            .stat {
+                flex: 1;
+                text-align: center;
+                padding: 6px 4px;
+                border-right: 1px solid var(--border);
+            }
+            .stat:last-child {
+                border-right: none;
+            }
+            .sv {
+                display: block;
+                font-size: 18px;
+                color: var(--c);
+                text-shadow: 0 0 7px var(--c);
+            }
+            .sv.am {
+                color: var(--amber);
+                text-shadow: 0 0 7px var(--amber);
+            }
+            .sl {
+                font-size: 9px;
+                letter-spacing: 2px;
+                color: var(--muted);
+            }
+            .body {
+                display: flex;
+                flex: 1;
+                overflow: hidden;
+            }
+            .side {
+                width: 270px;
+                flex-shrink: 0;
+                border-right: 1px solid var(--border);
+                background: var(--dk2);
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .pnl {
+                border-bottom: 1px solid var(--border);
+                padding: 12px 15px;
+            }
+            .ptitle {
+                font-size: 10px;
+                letter-spacing: 3px;
+                color: var(--muted);
+                margin-bottom: 10px;
+                padding-bottom: 7px;
+                border-bottom: 1px solid var(--border);
+            }
+            .db {
+                display: block;
+                width: 100%;
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--muted);
+                font-family: inherit;
+                font-size: 11px;
+                letter-spacing: 1px;
+                padding: 7px 10px;
+                cursor: pointer;
+                text-align: left;
+                margin-bottom: 5px;
+                transition: all 0.15s;
+            }
+            .db:hover,
+            .db.on {
+                border-color: var(--cdim);
+                color: var(--c);
+                background: var(--cfaint);
+                text-shadow: 0 0 5px var(--c);
+            }
+            .btn {
+                display: block;
+                width: 100%;
+                background: var(--c);
+                border: none;
+                color: #000;
+                font-family: inherit;
+                font-size: 12px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                padding: 10px;
+                cursor: pointer;
+                margin-bottom: 6px;
+                transition: all 0.15s;
+            }
+            .btn:hover:not(:disabled) {
+                background: #00ccee;
+                box-shadow: 0 0 14px var(--cglow);
+            }
+            .btn:disabled {
+                opacity: 0.2;
+                cursor: not-allowed;
+            }
+            .btn-a {
+                display: block;
+                width: 100%;
+                background: transparent;
+                border: 1px solid #5a3a00;
+                color: var(--amber);
+                font-family: inherit;
+                font-size: 12px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                padding: 10px;
+                cursor: pointer;
+                margin-bottom: 6px;
+                transition: all 0.15s;
+            }
+            .btn-a:hover:not(:disabled) {
+                border-color: var(--amber);
+                background: rgba(255, 187, 0, 0.06);
+            }
+            .btn-a:disabled {
+                opacity: 0.2;
+                cursor: not-allowed;
+            }
+            .btn-r {
+                display: block;
+                width: 100%;
+                background: transparent;
+                border: 1px solid #550010;
+                color: var(--red);
+                font-family: inherit;
+                font-size: 12px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                padding: 10px;
+                cursor: pointer;
+                margin-bottom: 6px;
+                transition: all 0.15s;
+            }
+            .btn-r:hover:not(:disabled) {
+                border-color: var(--red);
+                background: rgba(255, 68, 85, 0.08);
+                box-shadow: 0 0 10px rgba(255, 68, 85, 0.2);
+            }
+            .btn-r:disabled {
+                opacity: 0.2;
+                cursor: not-allowed;
+            }
+            /* VAE paid reveal — pulsing red cell */
+            .cell.vae-revealed {
+                background: rgba(255, 30, 50, 0.22) !important;
+                border-color: var(--red) !important;
+                animation: vae-pulse 1.4s ease infinite;
+            }
+            @keyframes vae-pulse {
+                0%,
+                100% {
+                    box-shadow: inset 0 0 10px rgba(255, 68, 85, 0.35);
+                }
+                50% {
+                    box-shadow: inset 0 0 22px rgba(255, 68, 85, 0.7);
+                }
+            }
+            /* Auto-VAE hint highlight — amber ring */
+            .cell.auto-vae-hl {
+                border-color: var(--amber) !important;
+                box-shadow: inset 0 0 12px rgba(255, 187, 0, 0.3);
+                animation: av-pulse 1s ease 3;
+            }
+            @keyframes av-pulse {
+                0%,
+                100% {
+                    box-shadow: inset 0 0 12px rgba(255, 187, 0, 0.3);
+                }
+                50% {
+                    box-shadow: inset 0 0 24px rgba(255, 187, 0, 0.65);
+                }
+            }
+            /* Toast popup */
+            #vae-toast {
+                position: fixed;
+                top: 60px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(5, 9, 12, 0.95);
+                border: 1px solid var(--amber);
+                color: var(--amber);
+                font-family: "Share Tech Mono", monospace;
+                font-size: 10px;
+                letter-spacing: 2px;
+                padding: 10px 22px;
+                z-index: 999;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.3s;
+                text-align: center;
+                box-shadow: 0 0 20px rgba(255, 187, 0, 0.25);
+                white-space: nowrap;
+            }
+            #vae-toast.show {
+                opacity: 1;
+            }
+            .btn-g {
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--muted);
+                font-size: 10px;
+            }
+            .btn-g:hover:not(:disabled) {
+                color: var(--c);
+                border-color: var(--cdim);
+            }
+            .leg-r {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 6px;
+                font-size: 10px;
+                color: var(--muted);
+            }
+            .sw {
+                width: 14px;
+                height: 14px;
+                border-radius: 2px;
+                flex-shrink: 0;
+            }
+            #log {
+                font-size: 9px;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                overflow-y: auto;
+                max-height: 170px;
+            }
+            .ll {
+                color: var(--muted);
+            }
+            .ll.ok {
+                color: #00aabb;
+            }
+            .ll.warn {
+                color: var(--amber);
+            }
+            .ll.err {
+                color: var(--red);
+            }
+
+            /* ── GAME AREA ── */
+            #ga {
+                flex: 1;
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 10, 18, 0.6);
+            }
+
+            /* Grid fills the game area */
+            #grid-layer {
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #gc {
+                display: inline-grid;
+                gap: 2px;
+            }
+
+            .cell {
+                border: 1.5px solid rgba(0, 229, 255, 0.55);
+                box-shadow:
+                    inset 0 0 6px rgba(0, 229, 255, 0.07),
+                    0 0 3px rgba(0, 229, 255, 0.15);
+                cursor: pointer;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 20, 35, 0.85);
+                transition:
+                    background 0.08s,
+                    border-color 0.08s,
+                    box-shadow 0.08s;
+                user-select: none;
+                overflow: hidden;
+                border-radius: 2px;
+            }
+            .cell:hover:not(.rev):not(.fl) {
+                background: rgba(0, 229, 255, 0.18);
+                border-color: var(--c);
+                box-shadow:
+                    inset 0 0 12px rgba(0, 229, 255, 0.2),
+                    0 0 8px rgba(0, 229, 255, 0.3);
+                z-index: 3;
+            }
+            /* Safe/revealed — bright teal-green fill */
+            .cell.rev {
+                background: rgba(0, 60, 40, 0.75);
+                border-color: rgba(0, 220, 120, 0.7);
+                box-shadow: inset 0 0 10px rgba(0, 220, 120, 0.18);
+                cursor: default;
+            }
+            .cell.fl {
+                background: rgba(255, 187, 0, 0.15);
+                border-color: rgba(255, 187, 0, 0.75);
+                box-shadow: inset 0 0 8px rgba(255, 187, 0, 0.2);
+            }
+            .cell.boom {
+                background: rgba(255, 50, 50, 0.7);
+                border-color: #ff4455;
+                box-shadow: inset 0 0 18px rgba(255, 0, 0, 0.5);
+                animation: bm 0.45s ease;
+            }
+            @keyframes bm {
+                0% {
+                    background: rgba(255, 0, 0, 0.95);
+                }
+                100% {
+                    background: rgba(255, 50, 50, 0.7);
+                }
+            }
+            .cell.aiend {
+                background: rgba(0, 229, 255, 0.07);
+                border-color: var(--cdim);
+            }
+            .cell.scanhl {
+                border-color: var(--amber) !important;
+                box-shadow: inset 0 0 10px rgba(255, 187, 0, 0.22);
+            }
+            .cn {
+                font-size: 11px;
+                font-weight: bold;
+                pointer-events: none;
+                z-index: 2;
+                line-height: 1;
+            }
+            .cf {
+                font-size: 11px;
+                pointer-events: none;
+                z-index: 2;
+            }
+
+            /* overlay */
+            #ov {
+                position: absolute;
+                inset: 0;
+                background: rgba(5, 9, 12, 0.88);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 20;
+                gap: 16px;
+                backdrop-filter: blur(3px);
+            }
+            #ov.h {
+                display: none;
+            }
+            .ot {
+                font-size: clamp(17px, 3.5vw, 28px);
+                letter-spacing: 8px;
+                text-shadow:
+                    0 0 18px var(--c),
+                    0 0 45px var(--cglow);
+            }
+            .ot.red {
+                color: var(--red);
+                text-shadow: 0 0 18px rgba(255, 68, 85, 0.55);
+            }
+            .om {
+                font-size: 9px;
+                letter-spacing: 2px;
+                color: var(--muted);
+                text-align: center;
+                max-width: 380px;
+                line-height: 2.2;
+            }
+            .obtn {
+                background: var(--c);
+                border: none;
+                color: #000;
+                font-family: inherit;
+                font-size: 10px;
+                font-weight: bold;
+                letter-spacing: 4px;
+                padding: 11px 36px;
+                cursor: pointer;
+                box-shadow: 0 0 22px var(--cglow);
+            }
+            .obtn:hover {
+                background: #00ccee;
+            }
+            #bot {
+                border-top: 1px solid var(--border);
+                background: var(--dk2);
+                padding: 6px 14px;
+                font-size: 10px;
+                color: var(--muted);
+                letter-spacing: 2px;
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                flex-shrink: 0;
+            }
+            .bv {
+                color: var(--c);
+            }
+            #sm {
+                margin-left: auto;
+                color: rgba(0, 229, 255, 0.4);
+            }
+            ::-webkit-scrollbar {
+                width: 3px;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--border);
+            }
+
+            /* ── Back to menu button ── */
+            .back-to-menu {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 200;
+                background: transparent;
+                border: 1px solid var(--cdim);
+                color: var(--cdim);
+                font-family: "Share Tech Mono", monospace;
+                font-size: 9px;
+                letter-spacing: 3px;
+                padding: 5px 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .back-to-menu:hover {
+                border-color: var(--c);
+                color: var(--c);
+                background: rgba(0, 229, 255, 0.06);
+                box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+            }
+        </style>
+    </head>
+    <body>
+        <button class="back-to-menu" onclick="window.location.href = '/'">
+            ← MENU
+        </button>
+        <div id="vae-toast"></div>
+        <canvas id="rain"></canvas>
+        <div class="app">
+            <div class="shell">
+                <div class="hdr">
+                    <h1>⬡ CITY SWEEP</h1>
+                    <div class="sub">
+                        // NEURAL CITY DEFENSE PROTOCOL · INTERCEPT EMBEDDED AIs
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <span class="sv" id="vs">1000</span
+                        ><span class="sl">SCORE</span>
+                    </div>
+                    <div class="stat">
+                        <span class="sv" id="vr">0</span
+                        ><span class="sl">ROUND</span>
+                    </div>
+                    <div class="stat">
+                        <span class="sv am" id="vk">0</span
+                        ><span class="sl">STREAK</span>
+                    </div>
+                    <div class="stat">
+                        <span class="sv" id="vsf">—</span
+                        ><span class="sl">SAFE LEFT</span>
+                    </div>
+                    <div class="stat">
+                        <span class="sv" id="vfl">0</span
+                        ><span class="sl">FLAGGED</span>
+                    </div>
+                    <div class="stat">
+                        <span class="sv" id="vai">—</span
+                        ><span class="sl">AI COUNT</span>
+                    </div>
+                </div>
+
+                <div class="body">
+                    <div class="side">
+                        <div class="pnl">
+                            <div class="ptitle">// DIFFICULTY</div>
+                            <button class="db" data-d="recruit">
+                                RECRUIT · 6×6 · 5 AI
+                            </button>
+                            <button class="db" data-d="operative">
+                                OPERATIVE · 8×8 · 8 AI
+                            </button>
+                            <button class="db on" data-d="elite">
+                                ELITE · 10×10 · 10 AI
+                            </button>
+                            <button class="db" data-d="nightmare">
+                                NIGHTMARE · 12×12 · 14 AI
+                            </button>
+                        </div>
+                        <div class="pnl">
+                            <div class="ptitle">// ACTIONS</div>
+                            <button class="btn" id="bn">
+                                ▶ DEPLOY MISSION
+                            </button>
+                            <button class="btn btn-a" id="bsc" disabled>
+                                ⬡ VAE SCAN −100 PTS
+                            </button>
+                            <button class="btn-r" id="bvr" disabled>
+                                ◉ VAE REVEAL −500 PTS
+                            </button>
+                            <button
+                                class="btn btn-g"
+                                id="brs"
+                                style="margin-top: 5px"
+                            >
+                                ↺ FULL RESET
+                            </button>
+                        </div>
+                        <div class="pnl">
+                            <div class="ptitle">// CONTROLS</div>
+                            <div
+                                style="
+                                    font-size: 10px;
+                                    color: var(--muted);
+                                    line-height: 2.4;
+                                    letter-spacing: 1px;
+                                "
+                            >
+                                LEFT CLICK → REVEAL CELL<br />RIGHT CLICK → FLAG
+                                SUSPECT<br />VAE SCAN → BEST CELL AI COUNT<br />VAE
+                                REVEAL → MARKS 1 AI FREE<br />AUTO HINT → EVERY
+                                5 CORRECT
+                            </div>
+                        </div>
+                        <div class="pnl">
+                            <div class="ptitle">// LEGEND</div>
+                            <div class="leg-r">
+                                <div
+                                    class="sw"
+                                    style="
+                                        background: transparent;
+                                        border: 1px solid rgba(0, 229, 255, 0.2);
+                                    "
+                                ></div>
+                                unrevealed
+                            </div>
+                            <div class="leg-r">
+                                <div
+                                    class="sw"
+                                    style="
+                                        background: rgba(0, 60, 40, 0.75);
+                                        border: 1px solid rgba(0, 220, 120, 0.7);
+                                    "
+                                ></div>
+                                cleared safe
+                            </div>
+                            <div class="leg-r">
+                                <div
+                                    class="sw"
+                                    style="
+                                        background: rgba(255, 187, 0, 0.13);
+                                        border: 1px solid rgba(255, 187, 0, 0.6);
+                                    "
+                                ></div>
+                                flagged
+                            </div>
+                            <div class="leg-r">
+                                <div
+                                    class="sw"
+                                    style="
+                                        background: rgba(255, 50, 50, 0.6);
+                                        border: 1px solid #ff4455;
+                                    "
+                                ></div>
+                                AI breach
+                            </div>
+                            <div class="leg-r">
+                                <div
+                                    class="sw"
+                                    style="border: 1px solid var(--amber)"
+                                ></div>
+                                VAE scan cell
+                            </div>
+                            <div class="leg-r">
+                                <div
+                                    style="
+                                        width: 10px;
+                                        height: 10px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        flex-shrink: 0;
+                                    "
+                                >
+                                    <span
+                                        style="font-size: 10px; color: var(--c)"
+                                        >3</span
+                                    >
+                                </div>
+                                ai neighbour count
+                            </div>
+                        </div>
+                        <div class="pnl" style="flex: 1">
+                            <div class="ptitle">// SYSTEM LOG</div>
+                            <div id="log"></div>
+                        </div>
+                    </div>
+
+                    <div id="ga">
+                        <div id="grid-layer"><div id="gc"></div></div>
+                        <div id="ov">
+                            <div class="ot" id="ott">⬡ CITY SWEEP</div>
+                            <div class="om" id="otm">
+                                Select difficulty and deploy.<br />Locate all
+                                embedded mini-AIs in the city grid.
+                            </div>
+                            <button class="obtn" id="ob">▶ DEPLOY</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bot">
+                    <span>LMB: REVEAL</span><span>RMB: FLAG</span>
+                    <span>REVEALED: <span class="bv" id="vrev">0</span></span>
+                    <span id="sm">// AWAITING DEPLOYMENT</span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /* ══ MATRIX RAIN ══ */
+            (function () {
+                const canvas = document.getElementById("rain");
+                const ctx = canvas.getContext("2d");
+                const chars =
+                    "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF><{}[]|/\\#@$%^&*!";
+                const FONT_SIZE = 15;
+                const COL_W = 18;
+                let cols, drops, speeds;
+
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    cols = Math.floor(canvas.width / COL_W);
+                    drops = Array.from({ length: cols }, () =>
+                        Math.floor(
+                            Math.random() * -(canvas.height / FONT_SIZE),
+                        ),
+                    );
+                    // Each column falls at a slightly different speed for depth
+                    speeds = Array.from(
+                        { length: cols },
+                        () => 0.3 + Math.random() * 0.7,
+                    );
+                }
+
+                function draw() {
+                    // Semi-transparent black overlay creates the fading trail
+                    ctx.fillStyle = "rgba(5,9,12,0.065)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.font = FONT_SIZE + "px Share Tech Mono, monospace";
+
+                    for (let i = 0; i < cols; i++) {
+                        const y = Math.floor(drops[i]) * FONT_SIZE;
+
+                        // Bright white tip — the head of the stream
+                        ctx.fillStyle = "#e0ffe8";
+                        ctx.fillText(
+                            chars[Math.floor(Math.random() * chars.length)],
+                            i * COL_W,
+                            y,
+                        );
+
+                        // Bright green just behind the tip
+                        ctx.fillStyle = "#00ff41";
+                        ctx.fillText(
+                            chars[Math.floor(Math.random() * chars.length)],
+                            i * COL_W,
+                            y - FONT_SIZE,
+                        );
+
+                        // Mid green further back
+                        ctx.fillStyle = "rgba(0,200,50,0.7)";
+                        ctx.fillText(
+                            chars[Math.floor(Math.random() * chars.length)],
+                            i * COL_W,
+                            y - FONT_SIZE * 2,
+                        );
+
+                        drops[i] += speeds[i];
+
+                        // Reset column to top (randomly staggered) once it exits screen
+                        if (
+                            drops[i] * FONT_SIZE > canvas.height &&
+                            Math.random() > 0.975
+                        ) {
+                            drops[i] = Math.floor(Math.random() * -20);
+                            speeds[i] = 0.3 + Math.random() * 0.7;
+                        }
+                    }
+                }
+
+                window.addEventListener("resize", resize);
+                resize();
+                setInterval(draw, 40);
+            })();
+
+            /* ══ GAME STATE ══ */
+            /* ══ GAME STATE ══ */
+            const API = "/game2";
+            let G = {
+                rows: 10,
+                cols: 10,
+                aiCount: 0,
+                revealed: new Set(),
+                flagged: new Set(),
+                nbMap: {},
+                status: "idle",
+                score: 1000,
+                round: 0,
+                streak: 0,
+                diff: "elite",
+                seed: 1,
+            };
+            const gcEl = document.getElementById("gc"),
+                ovEl = document.getElementById("ov"),
+                ottEl = document.getElementById("ott"),
+                otmEl = document.getElementById("otm"),
+                logEl = document.getElementById("log"),
+                smEl = document.getElementById("sm");
+
+            function log(txt, c = "") {
+                const d = document.createElement("div");
+                d.className = "ll " + c;
+                d.textContent = "> " + txt;
+                logEl.prepend(d);
+                while (logEl.children.length > 60)
+                    logEl.removeChild(logEl.lastChild);
+            }
+            function hud() {
+                document.getElementById("vs").textContent = G.score;
+                document.getElementById("vr").textContent = G.round;
+                document.getElementById("vk").textContent = G.streak;
+                document.getElementById("vfl").textContent = G.flagged.size;
+                document.getElementById("vrev").textContent = G.revealed.size;
+                if (G.aiCount) {
+                    document.getElementById("vai").textContent = G.aiCount;
+                    document.getElementById("vsf").textContent = Math.max(
+                        0,
+                        G.rows * G.cols - G.aiCount - G.revealed.size,
+                    );
+                }
+            }
+            function buildGrid() {
+                const ga = document.getElementById("ga");
+                const GAP = 2;
+                const pad = 16; // padding inside game area
+                const availW = ga.clientWidth - pad * 2;
+                const availH = ga.clientHeight - pad * 2;
+                const cellW = Math.floor(
+                    (availW - GAP * (G.cols - 1)) / G.cols,
+                );
+                const cellH = Math.floor(
+                    (availH - GAP * (G.rows - 1)) / G.rows,
+                );
+                const sz = Math.max(28, Math.min(cellW, cellH)); // square cells
+
+                gcEl.style.gridTemplateColumns = `repeat(${G.cols}, ${sz}px)`;
+                gcEl.style.gridTemplateRows = `repeat(${G.rows}, ${sz}px)`;
+                gcEl.style.gap = GAP + "px";
+                gcEl.innerHTML = "";
+                for (let r = 0; r < G.rows; r++)
+                    for (let c = 0; c < G.cols; c++) {
+                        const el = document.createElement("div");
+                        el.className = "cell";
+                        el.dataset.r = r;
+                        el.dataset.c = c;
+                        el.style.width = sz + "px";
+                        el.style.height = sz + "px";
+                        // font size scales with cell size
+                        el.style.fontSize =
+                            Math.max(10, Math.round(sz * 0.38)) + "px";
+                        el.addEventListener("click", onL);
+                        el.addEventListener("contextmenu", onR);
+                        gcEl.appendChild(el);
+                    }
+            }
+            function getCell(r, c) {
+                return gcEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+            }
+            function renderCell(r, c) {
+                const el = getCell(r, c);
+                if (!el) return;
+                const k = r + "," + c;
+                el.innerHTML = "";
+                el.className = "cell";
+                if (G.flagged.has(k)) {
+                    el.classList.add("fl");
+                    const s = document.createElement("span");
+                    s.className = "cf";
+                    s.textContent = "⚑";
+                    s.style.color = "var(--amber)";
+                    el.appendChild(s);
+                    return;
+                }
+                if (G.revealed.has(k)) {
+                    el.classList.add("rev");
+                    const n = G.nbMap[k] || 0;
+                    if (n > 0) {
+                        const cols_ = [
+                            "",
+                            "#00e5ff",
+                            "#00aaff",
+                            "#ffbb00",
+                            "#ff8800",
+                            "#ff4455",
+                            "#ff0088",
+                            "#aa00ff",
+                            "#ff00ff",
+                        ];
+                        const sp = document.createElement("span");
+                        sp.className = "cn";
+                        sp.textContent = n;
+                        sp.style.color = cols_[Math.min(n, 8)];
+                        sp.style.textShadow = `0 0 7px ${cols_[Math.min(n, 8)]}`;
+                        el.appendChild(sp);
+                    }
+                }
+            }
+
+            /* ══ VAE HELPERS ══ */
+            function showVaeToast(msg, duration = 3500) {
+                const t = document.getElementById("vae-toast");
+                t.textContent = msg;
+                t.classList.add("show");
+                clearTimeout(t._timer);
+                t._timer = setTimeout(
+                    () => t.classList.remove("show"),
+                    duration,
+                );
+            }
+
+            function highlightAutoVae(r, c, aiCount) {
+                const el = getCell(r, c);
+                if (!el) return;
+                el.classList.add("auto-vae-hl");
+                // Remove highlight after animation completes
+                setTimeout(() => el.classList.remove("auto-vae-hl"), 3000);
+            }
+
+            async function doVaeReveal() {
+                if (G.status !== "playing") return;
+                try {
+                    const d = await fetch(API + "/api/vae_reveal", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({}),
+                    }).then((r) => r.json());
+                    if (d.error) {
+                        log(d.error, "warn");
+                        return;
+                    }
+                    G.score = d.score;
+                    document.getElementById("bvr").disabled = true;
+                    const el = getCell(d.row, d.col);
+                    if (el) {
+                        el.classList.add("vae-revealed");
+                        el.innerHTML = `<span class="cn" style="color:var(--red);font-size:13px;">◉</span>`;
+                    }
+                    showVaeToast(
+                        `◉ VAE REVEAL → AI AT [${d.row},${d.col}]  −${d.cost}PTS`,
+                        4000,
+                    );
+                    log(
+                        `VAE REVEAL → AI LOCATED [${d.row},${d.col}]  −${d.cost}pts`,
+                        "err",
+                    );
+                    hud();
+                } catch (e) {
+                    log("VAE reveal failed", "err");
+                }
+            }
+
+            async function onL() {
+                if (G.status !== "playing") return;
+                const r = +this.dataset.r,
+                    c = +this.dataset.c,
+                    k = r + "," + c;
+                if (G.revealed.has(k) || G.flagged.has(k)) return;
+                try {
+                    const d = await fetch(API + "/api/click", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ row: r, col: c }),
+                    }).then((r) => r.json());
+                    if (d.error) {
+                        log(d.error, "err");
+                        return;
+                    }
+                    G.score = d.score;
+                    G.streak = d.streak;
+                    // ── Auto-VAE hint (every 5 correct reveals) ──
+                    if (d.auto_vae) {
+                        const av = d.auto_vae;
+                        const [ar, ac] = av.cell;
+                        highlightAutoVae(ar, ac, av.ai_neighbors);
+                        showVaeToast(
+                            `⬡ VAE HINT [${ar},${ac}] → ${av.ai_neighbors} AI(s) nearby`,
+                            4500,
+                        );
+                        log(
+                            `AUTO-VAE HINT: [${ar},${ac}] has ${av.ai_neighbors} AI neighbour(s)`,
+                            "warn",
+                        );
+                    }
+                    if (d.result === "ai_hit") {
+                        G.status = "lost";
+                        const el = getCell(r, c);
+                        el.className = "cell boom";
+                        el.innerHTML = `<span class="cn" style="color:#ff4455;font-size:15px;">✕</span>`;
+                        (d.ai_positions || []).forEach((p) => {
+                            if (p[0] + "," + p[1] !== k) {
+                                const cc = getCell(p[0], p[1]);
+                                if (cc) {
+                                    cc.className = "cell boom";
+                                    cc.innerHTML = `<span class="cn" style="color:#ff6677;font-size:12px;">✕</span>`;
+                                }
+                            }
+                        });
+                        showOv(
+                            "BREACH DETECTED",
+                            "Mini-AI activated — mission failed.",
+                            "red",
+                        );
+                        smEl.textContent = "// BREACH — GAME OVER";
+                        smEl.style.color = "var(--red)";
+                        log("AI HIT at [" + r + "," + c + "]", "err");
+                        document.getElementById("bsc").disabled = true;
+                        document.getElementById("bvr").disabled = true;
+                    } else {
+                        G.revealed.add(k);
+                        G.nbMap[k] = d.neighbor_count || 0;
+                        renderCell(r, c);
+                        log(
+                            `SAFE [${r},${c}] +${d.points_gained}pts  (${d.neighbor_count || 0} adj)`,
+                            "ok",
+                        );
+                        if (d.won) {
+                            G.status = "won";
+                            (d.ai_positions || []).forEach((p) => {
+                                const cc = getCell(p[0], p[1]);
+                                if (cc) {
+                                    cc.className = "cell aiend";
+                                    cc.innerHTML = `<span class="cn" style="color:var(--c);font-size:10px;">●</span>`;
+                                }
+                            });
+                            showOv(
+                                "CITY CLEARED",
+                                `All nodes secured. +${d.bonus} bonus. Streak: ${G.streak}.`,
+                                "",
+                            );
+                            smEl.textContent = "// CITY CLEARED";
+                            smEl.style.color = "var(--c)";
+                            log("CITY CLEARED! +" + d.bonus, "ok");
+                            document.getElementById("bsc").disabled = true;
+                            document.getElementById("bvr").disabled = true;
+                        }
+                    }
+                    hud();
+                } catch (e) {
+                    log("Connection error — run server.py", "err");
+                }
+            }
+            async function onR(e) {
+                e.preventDefault();
+                if (G.status !== "playing") return;
+                const r = +this.dataset.r,
+                    c = +this.dataset.c,
+                    k = r + "," + c;
+                if (G.revealed.has(k)) return;
+                try {
+                    const d = await fetch(API + "/api/flag", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ row: r, col: c }),
+                    }).then((r) => r.json());
+                    if (d.error) return;
+                    if (d.action === "flagged") G.flagged.add(k);
+                    else G.flagged.delete(k);
+                    renderCell(r, c);
+                    hud();
+                } catch (e) {}
+            }
+            async function startGame() {
+                hideOv();
+                log("Generating grid [" + G.diff + "]...", "");
+                document.getElementById("bn").disabled = true;
+                document.getElementById("bsc").disabled = true;
+                document.getElementById("bvr").disabled = true;
+                smEl.textContent = "// GENERATING GRID...";
+                smEl.style.color = "rgba(0,229,255,.3)";
+                try {
+                    const d = await fetch(API + "/api/new_game", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ difficulty: G.diff }),
+                    }).then((r) => r.json());
+                    if (d.error) {
+                        log("ERROR: " + d.error, "err");
+                        document.getElementById("bn").disabled = false;
+                        return;
+                    }
+                    G.rows = d.rows;
+                    G.cols = d.cols;
+                    G.aiCount = d.ai_count;
+                    G.revealed = new Set();
+                    G.flagged = new Set();
+                    G.nbMap = {};
+                    G.status = "playing";
+                    G.score = d.score;
+                    G.round = d.round;
+
+                    buildGrid();
+                    hud();
+                    smEl.textContent = "// " + d.message;
+                    smEl.style.color = "rgba(0,229,255,.5)";
+                    log(d.message, "ok");
+                    document.getElementById("bn").disabled = false;
+                    document.getElementById("bsc").disabled = false;
+                    document.getElementById("bvr").disabled = false;
+                } catch (e) {
+                    log("Server unreachable — run server.py first", "err");
+                    document.getElementById("bn").disabled = false;
+                }
+            }
+            async function doScan() {
+                if (G.status !== "playing") return;
+                try {
+                    const d = await fetch(API + "/api/anomaly_detect", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({}),
+                    }).then((r) => r.json());
+                    if (d.error) {
+                        log(d.error, "warn");
+                        return;
+                    }
+                    G.score = d.score;
+                    document.getElementById("bsc").disabled = true;
+                    const [r, c] = d.scan_cell;
+                    const n = d.ai_neighbors;
+                    const k = r + "," + c;
+                    G.nbMap[k] = n;
+                    const el = getCell(r, c);
+                    if (el) {
+                        renderCell(r, c);
+                        el.classList.add("scanhl");
+                    }
+                    log(
+                        `VAE SCAN → [${r},${c}] has ${n} AI(s) nearby  −100pts`,
+                        "warn",
+                    );
+                    hud();
+                } catch (e) {
+                    log("Scan failed", "err");
+                }
+            }
+            async function fullReset() {
+                await fetch(API + "/api/reset", { method: "POST" }).catch(
+                    () => {},
+                );
+                G.score = 1000;
+                G.round = 0;
+                G.streak = 0;
+                G.status = "idle";
+                G.revealed = new Set();
+                G.flagged = new Set();
+                G.nbMap = {};
+                G.aiCount = 0;
+                document.getElementById("vai").textContent = "—";
+                document.getElementById("vsf").textContent = "—";
+                gcEl.innerHTML = "";
+                document.getElementById("bsc").disabled = true;
+                document.getElementById("bvr").disabled = true;
+                hud();
+                showOv("SYSTEM RESET", "Select difficulty and deploy.", "");
+                log("System reset", "");
+            }
+            function showOv(t, m, c) {
+                ottEl.textContent = t;
+                ottEl.className = "ot" + (c ? " " + c : "");
+                otmEl.textContent = m;
+                ovEl.classList.remove("h");
+            }
+            function hideOv() {
+                ovEl.classList.add("h");
+            }
+            document.querySelectorAll(".db").forEach((b) => {
+                b.addEventListener("click", () => {
+                    document
+                        .querySelectorAll(".db")
+                        .forEach((x) => x.classList.remove("on"));
+                    b.classList.add("on");
+                    G.diff = b.dataset.d;
+                    log("Difficulty: " + G.diff.toUpperCase(), "");
+                });
+            });
+            document.getElementById("bn").addEventListener("click", startGame);
+            document.getElementById("bsc").addEventListener("click", doScan);
+            document
+                .getElementById("bvr")
+                .addEventListener("click", doVaeReveal);
+            document.getElementById("brs").addEventListener("click", fullReset);
+            document.getElementById("ob").addEventListener("click", startGame);
+            window.addEventListener("resize", () => {
+                if (G.status === "playing") {
+                    buildGrid();
+                    G.revealed.forEach((k) => {
+                        const [r, c] = k.split(",").map(Number);
+                        renderCell(r, c);
+                    });
+                    G.flagged.forEach((k) => {
+                        const [r, c] = k.split(",").map(Number);
+                        renderCell(r, c);
+                    });
+                }
+            });
+            log("System online. Awaiting deployment.", "ok");
+            hud();
+        </script>
+    </body>
+</html>

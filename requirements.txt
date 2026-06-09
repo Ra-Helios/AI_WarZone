@@ -1,0 +1,5 @@
+# Py - 3.12 recommended
+
+torch
+numpy
+flask

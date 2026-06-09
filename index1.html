@@ -1,0 +1,3723 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>DeC4rɹoD€</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+        <style>
+            :root {
+                --green: #00ff41;
+                --green-dim: #00cc33;
+                --green-glow: rgba(0, 255, 65, 0.2);
+                --red: #ff5555;
+                --blue: #58a6ff;
+                --dark: #0d1117;
+                --dark2: #161b22;
+                --border: #30363d;
+                --muted: #8b949e;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background: var(--dark);
+                color: var(--green);
+                font-family: "Share Tech Mono", "Courier New", monospace;
+                min-height: 100vh;
+                overflow-x: hidden;
+            }
+
+            /* ── Matrix canvas background ── */
+            #matrix-canvas {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 0;
+                opacity: 0.18;
+                pointer-events: none;
+            }
+
+            /* ── Main layout ── */
+            .app {
+                position: relative;
+                z-index: 1;
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 24px 20px;
+            }
+
+            /* ── Terminal window ── */
+            .terminal {
+                border: 2px solid var(--green);
+                padding: 28px;
+                box-shadow:
+                    0 0 30px var(--green-glow),
+                    inset 0 0 30px rgba(0, 255, 65, 0.03);
+                background: rgba(13, 17, 23, 0.92);
+                backdrop-filter: blur(2px);
+            }
+
+            /* ── Header ── */
+            .header {
+                text-align: center;
+                margin-bottom: 28px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            h1 {
+                font-size: clamp(22px, 4vw, 36px);
+                letter-spacing: 8px;
+                text-shadow:
+                    0 0 10px var(--green),
+                    0 0 30px var(--green-glow);
+                animation: flicker 5s infinite;
+                transition: opacity 0.2s ease;
+            }
+
+            @keyframes flicker {
+                0%,
+                92%,
+                100% {
+                    opacity: 1;
+                }
+                93% {
+                    opacity: 0.7;
+                }
+                94% {
+                    opacity: 1;
+                }
+                95% {
+                    opacity: 0.5;
+                }
+                96% {
+                    opacity: 1;
+                }
+            }
+
+            .header-sub {
+                font-size: 11px;
+                letter-spacing: 5px;
+                color: rgba(0, 255, 65, 0.4);
+                margin-top: 6px;
+            }
+
+            /* ── Stats bar ── */
+            .stats-bar {
+                display: flex;
+                gap: 2px;
+                margin-bottom: 20px;
+                border: 1px solid var(--border);
+            }
+
+            .stat {
+                flex: 1;
+                text-align: center;
+                padding: 10px 8px;
+                border-right: 1px solid var(--border);
+            }
+            .stat:last-child {
+                border-right: none;
+            }
+
+            .stat-val {
+                display: block;
+                font-size: 22px;
+                color: var(--green);
+                text-shadow: 0 0 8px var(--green);
+            }
+
+            .stat-lbl {
+                font-size: 9px;
+                letter-spacing: 3px;
+                color: var(--muted);
+                text-transform: uppercase;
+            }
+
+            /* ── Panel ── */
+            .panel {
+                border: 1px solid var(--border);
+                padding: 18px;
+                margin-bottom: 16px;
+                background: var(--dark2);
+                position: relative;
+            }
+
+            .panel-title {
+                font-size: 12px;
+                letter-spacing: 3px;
+                margin-bottom: 14px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .panel-title.red {
+                color: var(--red);
+                text-shadow: 0 0 8px var(--red);
+            }
+            .panel-title.blue {
+                color: var(--blue);
+                text-shadow: 0 0 8px var(--blue);
+            }
+            .panel-title.green {
+                color: var(--green);
+                text-shadow: 0 0 8px var(--green);
+            }
+
+            /* ── Corrupted text display ── */
+            .corrupted-display {
+                font-size: clamp(16px, 2.2vw, 22px);
+                color: var(--red);
+                text-shadow: 0 0 8px rgba(255, 85, 85, 0.5);
+                line-height: 2;
+                padding: 28px 32px;
+                background: rgba(255, 85, 85, 0.04);
+                border: 1px solid rgba(255, 85, 85, 0.2);
+                letter-spacing: 2px;
+                word-break: break-word;
+                min-height: 160px;
+                flex: 1;
+            }
+
+            /* ── Input ── */
+            input[type="text"] {
+                background: var(--dark);
+                border: 1px solid var(--green);
+                color: var(--green);
+                padding: 11px 14px;
+                width: 100%;
+                font-family: inherit;
+                font-size: 15px;
+                outline: none;
+                caret-color: var(--green);
+                transition: box-shadow 0.2s;
+            }
+
+            input[type="text"]:focus {
+                box-shadow: 0 0 12px var(--green-glow);
+            }
+
+            input[type="text"]::placeholder {
+                color: rgba(0, 255, 65, 0.25);
+            }
+
+            /* ── Buttons ── */
+            .btn {
+                background: var(--green);
+                color: #000;
+                border: none;
+                padding: 11px 22px;
+                font-weight: bold;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 13px;
+                letter-spacing: 2px;
+                transition: all 0.2s;
+                text-transform: uppercase;
+            }
+
+            .btn:hover {
+                background: var(--green-dim);
+                box-shadow: 0 0 15px var(--green-glow);
+            }
+            .btn:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+
+            .btn-red {
+                background: transparent;
+                color: var(--red);
+                border: 1px solid var(--red);
+            }
+            .btn-red:hover {
+                background: rgba(255, 85, 85, 0.1);
+                box-shadow: 0 0 15px rgba(255, 85, 85, 0.2);
+            }
+
+            .btn-blue {
+                background: transparent;
+                color: var(--blue);
+                border: 1px solid var(--blue);
+            }
+            .btn-blue:hover {
+                background: rgba(88, 166, 255, 0.1);
+                box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);
+            }
+
+            .btn-ghost {
+                background: transparent;
+                color: var(--muted);
+                border: 1px solid var(--border);
+            }
+            .btn-ghost:hover {
+                color: var(--green);
+                border-color: var(--green);
+            }
+
+            .btn-row {
+                display: flex;
+                gap: 10px;
+                margin-top: 14px;
+                flex-wrap: wrap;
+            }
+
+            /* ── Input + button inline ── */
+            .input-row {
+                display: flex;
+                gap: 10px;
+                margin-top: 12px;
+            }
+
+            .input-row input {
+                flex: 1;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+
+            .input-row input.wrong-input {
+                border-color: var(--blue) !important;
+                box-shadow: 0 0 8px rgba(88, 166, 255, 0.4);
+                color: var(--blue);
+            }
+
+            /* ── Attempt dots ── */
+            .attempts-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin: 14px 0;
+            }
+
+            .dot {
+                width: 13px;
+                height: 13px;
+                border-radius: 50%;
+                border: 1px solid var(--border);
+                background: transparent;
+                transition: all 0.3s;
+            }
+
+            .dot.used {
+                background: var(--red);
+                border-color: var(--red);
+                box-shadow: 0 0 5px var(--red);
+            }
+            .dot.cur {
+                background: var(--green);
+                border-color: var(--green);
+                box-shadow: 0 0 5px var(--green);
+                animation: blink 1s infinite;
+            }
+
+            @keyframes blink {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.3;
+                }
+            }
+
+            .pts-badge {
+                margin-left: auto;
+                font-size: 12px;
+                color: var(--green);
+                letter-spacing: 1px;
+            }
+
+            /* ── Hints ── */
+            .hint-item {
+                display: flex;
+                gap: 10px;
+                padding: 9px 12px;
+                border-left: 2px solid var(--green);
+                background: rgba(0, 255, 65, 0.03);
+                margin-bottom: 8px;
+                font-size: 13px;
+                animation: slideIn 0.3s ease;
+                color: rgba(0, 255, 65, 0.85);
+            }
+
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+
+            .hint-tag {
+                color: var(--muted);
+                white-space: nowrap;
+                font-size: 11px;
+                padding-top: 1px;
+            }
+
+            /* ── Chatbot ── */
+            .chat-messages {
+                max-height: 200px;
+                overflow-y: auto;
+                padding: 8px 0;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .chat-messages::-webkit-scrollbar {
+                width: 3px;
+            }
+            .chat-messages::-webkit-scrollbar-thumb {
+                background: var(--border);
+            }
+
+            .msg {
+                padding: 8px 12px;
+                font-size: 13px;
+                max-width: 85%;
+                line-height: 1.5;
+            }
+
+            .msg.bot {
+                border-left: 2px solid var(--green);
+                background: rgba(0, 255, 65, 0.04);
+                color: rgba(0, 255, 65, 0.85);
+                align-self: flex-start;
+            }
+
+            /* ── Markdown rendering inside bot messages ── */
+            .msg.bot strong, .msg.bot b {
+                color: var(--green);
+                text-shadow: 0 0 6px var(--green-glow);
+                font-weight: bold;
+            }
+
+            .msg.bot em, .msg.bot i {
+                color: rgba(0, 255, 65, 0.7);
+                font-style: italic;
+            }
+
+            .msg.bot p {
+                margin: 0 0 6px 0;
+            }
+            .msg.bot p:last-child {
+                margin-bottom: 0;
+            }
+
+            .msg.bot ul, .msg.bot ol {
+                margin: 4px 0 4px 16px;
+                padding: 0;
+            }
+
+            .msg.bot li {
+                margin-bottom: 2px;
+                color: rgba(0, 255, 65, 0.8);
+            }
+
+            .msg.bot code {
+                background: rgba(0, 255, 65, 0.08);
+                border: 1px solid rgba(0, 255, 65, 0.2);
+                padding: 1px 5px;
+                font-family: inherit;
+                font-size: 12px;
+                color: var(--green);
+            }
+
+            .msg.bot a {
+                color: var(--blue);
+                text-decoration: none;
+            }
+
+            .msg.bot hr {
+                border: none;
+                border-top: 1px solid var(--border);
+                margin: 6px 0;
+            }
+
+            .msg.user {
+                border-right: 2px solid var(--blue);
+                background: rgba(88, 166, 255, 0.04);
+                color: var(--blue);
+                align-self: flex-end;
+                text-align: right;
+            }
+
+            /* ── Two-column game layout ── */
+            .game-columns {
+                display: grid;
+                grid-template-columns: 3fr 1fr;
+                gap: 0;
+                align-items: stretch;
+                min-height: 560px;
+            }
+            @media (max-width: 820px) {
+                .game-columns { grid-template-columns: 1fr; }
+            }
+
+            /* Left — decode panel */
+            .game-left {
+                padding: 22px 24px;
+                border-right: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            /* Right — chatbot panel */
+            .game-right {
+                display: flex;
+                flex-direction: column;
+                background: rgba(0,0,0,0.15);
+            }
+            .game-right.bot-locked {
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Bot locked state */
+            .bot-locked-msg {
+                text-align: center;
+                padding: 32px 24px;
+            }
+            .bot-locked-msg .bot-icon { font-size: 40px; margin-bottom: 14px; }
+            .bot-locked-msg .bot-title {
+                font-size: 11px; letter-spacing: 3px;
+                color: var(--green); margin-bottom: 8px;
+            }
+            .bot-locked-msg .bot-sub {
+                font-size: 10px; color: var(--muted);
+                letter-spacing: 1px; margin-bottom: 20px;
+                line-height: 1.7;
+            }
+
+            /* Bot active state */
+            .bot-active-panel {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .bot-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                font-size: 10px;
+                letter-spacing: 2px;
+                color: var(--green);
+                flex-shrink: 0;
+            }
+            .bot-header .bot-turns {
+                font-size: 9px;
+                color: var(--muted);
+                background: rgba(0,255,65,0.06);
+                padding: 3px 8px;
+                border: 1px solid rgba(0,255,65,0.15);
+            }
+
+            /* Chat messages — fills available space */
+            .chat-messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 12px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-height: 0;
+                max-height: none;
+                margin-bottom: 0;
+            }
+            .chat-messages::-webkit-scrollbar { width: 3px; }
+            .chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
+
+            /* Message bubbles */
+            .msg {
+                padding: 10px 14px;
+                font-size: 12px;
+                max-width: 88%;
+                line-height: 1.6;
+                border-radius: 2px;
+                animation: msgIn 0.2s ease;
+            }
+            @keyframes msgIn {
+                from { opacity:0; transform:translateY(6px); }
+                to   { opacity:1; transform:none; }
+            }
+            .msg.bot {
+                align-self: flex-start;
+                background: rgba(0,255,65,0.05);
+                border-left: 2px solid var(--green);
+                color: rgba(0,255,65,0.9);
+                border-radius: 0 6px 6px 0;
+            }
+            .msg.user {
+                align-self: flex-end;
+                background: rgba(88,166,255,0.07);
+                border-right: 2px solid var(--blue);
+                color: var(--blue);
+                text-align: right;
+                border-radius: 6px 0 0 6px;
+            }
+            .msg.bot strong, .msg.bot b { color: var(--green); font-weight: bold; }
+            .msg.bot em { color: rgba(0,255,65,0.7); font-style: italic; }
+            .msg.bot p  { margin: 0 0 4px 0; }
+            .msg.bot p:last-child { margin-bottom:0; }
+            .msg.bot code {
+                background: rgba(0,255,65,0.08);
+                padding: 1px 5px; font-family: inherit; font-size:11px; color:var(--green);
+            }
+
+            /* Chat input bar */
+            .chat-input-bar {
+                display: flex;
+                border-top: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+            .chat-input-bar input {
+                flex: 1;
+                background: transparent;
+                border: none;
+                color: var(--green);
+                font-family: inherit;
+                font-size: 11px;
+                padding: 12px 14px;
+                outline: none;
+                letter-spacing: 1px;
+            }
+            .chat-input-bar input::placeholder { color: var(--muted); }
+            .chat-input-bar button {
+                background: rgba(0,255,65,0.1);
+                border: none;
+                border-left: 1px solid var(--border);
+                color: var(--green);
+                font-family: inherit;
+                font-size: 11px;
+                letter-spacing: 2px;
+                padding: 12px 18px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .chat-input-bar button:hover { background: rgba(0,255,65,0.2); }
+
+            /* Hints in left panel */
+            .hints-section {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            .hint-item {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                padding: 8px 12px;
+                border-left: 2px solid rgba(0,255,65,0.5);
+                background: rgba(0,255,65,0.03);
+                font-size: 11px;
+                animation: slideIn 0.3s ease;
+                color: rgba(0,255,65,0.85);
+                line-height: 1.5;
+            }
+            .hint-num {
+                font-size: 9px; color: var(--muted); letter-spacing: 2px;
+            }
+            .hint-text { color: rgba(0,255,65,0.9); }
+
+            /* Result overlay ── */
+            .overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(13, 17, 23, 0.93);
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(3px);
+            }
+
+            .result-box {
+                border: 2px solid;
+                padding: 44px 36px;
+                text-align: center;
+                max-width: 460px;
+                width: 90%;
+                background: var(--dark2);
+                animation: zoomIn 0.3s ease;
+            }
+
+            @keyframes zoomIn {
+                from {
+                    transform: scale(0.85);
+                    opacity: 0;
+                }
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            .result-box.win {
+                border-color: var(--green);
+                box-shadow: 0 0 40px var(--green-glow);
+            }
+            .result-box.lose {
+                border-color: var(--red);
+                box-shadow: 0 0 40px rgba(255, 85, 85, 0.2);
+            }
+
+            .result-icon {
+                font-size: 52px;
+                display: block;
+                margin-bottom: 14px;
+            }
+
+            .result-title {
+                font-size: 28px;
+                letter-spacing: 6px;
+                margin-bottom: 10px;
+            }
+
+            .win .result-title {
+                color: var(--green);
+                text-shadow: 0 0 15px var(--green);
+            }
+            .lose .result-title {
+                color: var(--red);
+                text-shadow: 0 0 15px var(--red);
+            }
+
+            .result-answer {
+                font-size: 15px;
+                padding: 12px;
+                background: rgba(0, 255, 65, 0.05);
+                border: 1px solid var(--border);
+                margin: 14px 0;
+                color: rgba(0, 255, 65, 0.8);
+                letter-spacing: 1px;
+            }
+
+            .result-pts {
+                font-size: 38px;
+                font-weight: bold;
+                margin: 12px 0;
+            }
+
+            .win .result-pts {
+                color: var(--green);
+                text-shadow: 0 0 15px var(--green);
+            }
+            .lose .result-pts {
+                color: var(--red);
+            }
+
+            .result-sub {
+                font-size: 12px;
+                color: var(--muted);
+                letter-spacing: 2px;
+                margin-bottom: 6px;
+            }
+
+            /* ── Nexeon Galaxy Map ── */
+            /* ── Network map ── */
+            #nexeon-canvas {
+                display: block;
+                width: 100%;
+                height: 340px;
+                min-height: 340px;
+                background: rgba(0,0,0,0);
+                cursor: default;
+                position: relative;
+                z-index: 2;
+            }
+            .nexeon-map-wrap {
+                width: 100%;
+                min-height: 340px;
+                margin-bottom: 14px;
+                position: relative;
+                overflow: hidden;
+                border: 1px solid rgba(0,255,65,0.12);
+                border-radius: 4px;
+            }
+
+            /* World map background */
+            .nexeon-map-bg {
+                position: absolute;
+                inset: 0;
+                z-index: 0;
+                pointer-events: none;
+                overflow: hidden;
+            }
+            .nexeon-map-bg::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(ellipse at 50% 0%, rgba(0,255,65,0.06) 0%, transparent 65%),
+                    radial-gradient(ellipse at 50% 100%, rgba(0,40,80,0.25) 0%, transparent 70%),
+                    linear-gradient(180deg, rgba(13,17,23,0.55) 0%, rgba(13,17,23,0.2) 40%, rgba(13,17,23,0.55) 100%);
+                z-index: 1;
+            }
+            .nexeon-map-bg svg {
+                width: 100%;
+                height: 100%;
+                opacity: 0.13;
+                filter: drop-shadow(0 0 2px rgba(0,255,65,0.4));
+            }
+
+            /* Scanline overlay on top of world map */
+            .nexeon-map-scanlines {
+                position: absolute;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                background: repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(0,0,0,0.08) 3px,
+                    rgba(0,0,0,0.08) 4px
+                );
+            }
+
+            /* Grid overlay */
+            .nexeon-map-grid {
+                position: absolute;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                background-image:
+                    linear-gradient(rgba(0,255,65,0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,255,65,0.04) 1px, transparent 1px);
+                background-size: 40px 40px;
+            }
+
+            /* Canvas sits on top */
+            #nexeon-canvas {
+                position: relative;
+                z-index: 2;
+            }
+
+            /* ── Nexeon info bar ── */
+            .nexeon-info-bar {
+                display: flex;
+                align-items: center;
+                gap: 0;
+                padding: 10px 16px;
+                border: 1px solid rgba(0,255,65,0.3);
+                margin-top: 10px;
+                background: rgba(0,255,65,0.03);
+                flex-wrap: wrap;
+                min-height: 52px;
+                font-family: "Share Tech Mono", monospace;
+            }
+            .nexeon-info-bar.locked-bar {
+                border-color: var(--border);
+                background: transparent;
+                color: var(--muted);
+            }
+            .nib-name {
+                font-size: 12px;
+                letter-spacing: 3px;
+                color: var(--green);
+                margin-right: 16px;
+            }
+            .nib-div {
+                width: 1px;
+                height: 30px;
+                background: var(--border);
+                flex-shrink: 0;
+                margin: 0 14px;
+            }
+            .nib-stat {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 3px;
+                min-width: 44px;
+                padding: 0 8px;
+            }
+            .nib-val {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--green);
+                line-height: 1;
+                letter-spacing: 1px;
+            }
+            .nib-lbl {
+                font-size: 8px;
+                color: var(--muted);
+                letter-spacing: 2px;
+                white-space: nowrap;
+            }
+
+            .nexeon-complete-overlay {
+                position: fixed; inset: 0;
+                background: rgba(0,0,0,0.85);
+                z-index: 500;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .nexeon-complete-box {
+                border: 2px solid #f5a623;
+                background: #0d1117;
+                padding: 36px 48px;
+                text-align: center;
+                box-shadow: 0 0 60px rgba(245,166,35,0.3);
+                font-family: "Share Tech Mono", monospace;
+                color: #f5a623;
+                max-width: 380px;
+            }
+            .nexeon-complete-box h2 { font-size: 22px; letter-spacing:4px; margin:0 0 8px; }
+            .nexeon-complete-box p  { font-size: 11px; letter-spacing:2px; opacity:0.8; margin:6px 0; color: var(--green); }
+
+
+            /* ── Progress ring on hex ── */
+            .nex-ring-svg { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+            /* badge strip */
+            .badge-strip {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 12px;
+                min-height: 28px;
+            }
+            .badge {
+                font-size: 20px;
+                cursor: default;
+                position: relative;
+            }
+            .badge[title]:hover::after {
+                content: attr(title);
+                position: absolute;
+                bottom: 110%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--dark2);
+                border: 1px solid var(--border);
+                padding: 3px 7px;
+                font-size: 10px;
+                white-space: nowrap;
+                color: var(--green);
+                letter-spacing: 1px;
+            }
+
+            /* ── Toast ── */
+            .toast {
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                padding: 11px 18px;
+                border: 1px solid;
+                font-family: inherit;
+                font-size: 12px;
+                letter-spacing: 1px;
+                z-index: 200;
+                animation:
+                    toastIn 0.3s ease,
+                    toastOut 0.3s ease 2.5s forwards;
+            }
+
+            .toast.ok {
+                border-color: var(--green);
+                color: var(--green);
+                background: rgba(0, 255, 65, 0.07);
+            }
+            .toast.err {
+                border-color: var(--red);
+                color: var(--red);
+                background: rgba(255, 85, 85, 0.07);
+            }
+            .toast.info {
+                border-color: var(--blue);
+                color: var(--blue);
+                background: rgba(88, 166, 255, 0.07);
+            }
+
+            @keyframes toastIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(16px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+            @keyframes toastOut {
+                to {
+                    opacity: 0;
+                    pointer-events: none;
+                }
+            }
+
+            /* ── Shake ── */
+            .shake {
+                animation: shake 0.35s ease;
+            }
+            @keyframes shake {
+                0%,
+                100% {
+                    transform: none;
+                }
+                20% {
+                    transform: translateX(-7px);
+                }
+                40% {
+                    transform: translateX(7px);
+                }
+                60% {
+                    transform: translateX(-4px);
+                }
+                80% {
+                    transform: translateX(4px);
+                }
+            }
+
+            .log {
+                font-size: 12px;
+                color: var(--muted);
+                margin-top: 6px;
+                letter-spacing: 1px;
+            }
+
+            /* ── Intro screen ── */
+            #intro-screen {
+                position: fixed;
+                inset: 0;
+                background: #000;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+            #intro-screen.fade-out {
+                animation: introFadeOut 0.7s ease forwards;
+                pointer-events: none;
+            }
+            @keyframes introFadeOut {
+                to { opacity: 0; }
+            }
+
+            /* ── Video phase ── */
+            #intro-video {
+                position: absolute;
+                inset: 0;
+                width: 100%; height: 100%;
+                object-fit: cover;
+                z-index: 1;
+                opacity: 0;
+                transition: opacity 0.6s ease;
+            }
+            #intro-video.visible { opacity: 1; }
+
+            #intro-video-skip {
+                position: absolute;
+                bottom: 32px; right: 32px;
+                z-index: 5;
+                font-family: "Share Tech Mono", monospace;
+                font-size: 11px;
+                color: rgba(255,255,255,0.45);
+                letter-spacing: 3px;
+                cursor: pointer;
+                padding: 8px 16px;
+                border: 1px solid rgba(255,255,255,0.15);
+                transition: color 0.2s, border-color 0.2s;
+                animation: introSkipPulse 2s ease 2s infinite;
+                display: none;
+            }
+            #intro-video-skip.visible { display: block; }
+            #intro-video-skip:hover {
+                color: #00ff41;
+                border-color: rgba(0,255,65,0.4);
+            }
+
+            /* ── Title card phase ── */
+            #intro-canvas {
+                position: absolute;
+                inset: 0;
+                opacity: 0.35;
+                z-index: 1;
+                display: none;
+            }
+            #intro-canvas.visible { display: block; }
+            .intro-scanline {
+                position: absolute;
+                inset: 0;
+                background: repeating-linear-gradient(
+                    0deg,
+                    transparent, transparent 2px,
+                    rgba(0,255,65,0.015) 2px, rgba(0,255,65,0.015) 4px
+                );
+                pointer-events: none;
+                z-index: 3;
+                display: none;
+            }
+            .intro-scanline.visible { display: block; }
+            .intro-vignette {
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(ellipse at center,
+                    transparent 40%, rgba(0,0,0,0.85) 100%);
+                pointer-events: none;
+                z-index: 3;
+                display: none;
+            }
+            .intro-vignette.visible { display: block; }
+            .intro-corner {
+                position: absolute;
+                width: 20px; height: 20px;
+                opacity: 0;
+                z-index: 4;
+            }
+            .intro-corner.tl { top:24px; left:24px;   border-top:1px solid #00ff41; border-left:1px solid #00ff41; }
+            .intro-corner.tr { top:24px; right:24px;  border-top:1px solid #00ff41; border-right:1px solid #00ff41; }
+            .intro-corner.bl { bottom:24px; left:24px; border-bottom:1px solid #00ff41; border-left:1px solid #00ff41; }
+            .intro-corner.br { bottom:24px; right:24px; border-bottom:1px solid #00ff41; border-right:1px solid #00ff41; }
+            .intro-corner.show { animation: introFadeIn 0.4s ease forwards; }
+            .intro-side-text {
+                position: absolute;
+                font-family: "Share Tech Mono", monospace;
+                font-size: 9px;
+                color: rgba(0,255,65,0.25);
+                letter-spacing: 2px;
+                opacity: 0;
+                z-index: 4;
+            }
+            .intro-side-text.left  { left:28px; top:50%; transform:translateY(-50%) rotate(-90deg); }
+            .intro-side-text.right { right:28px; top:50%; transform:translateY(-50%) rotate(90deg); }
+            .intro-side-text.show  { animation: introFadeIn 0.4s ease 0.2s forwards; }
+            .intro-content {
+                position: relative;
+                z-index: 5;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0;
+                opacity: 0;
+                pointer-events: none;
+            }
+            .intro-content.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .intro-boot-log {
+                font-family: "Share Tech Mono", monospace;
+                font-size: 11px;
+                color: #00ff41;
+                letter-spacing: 2px;
+                margin-bottom: 32px;
+                opacity: 0;
+                animation: none;
+            }
+            .intro-boot-log.show { animation: introFadeIn 0.4s ease forwards; }
+            .intro-title {
+                font-family: "Share Tech Mono", monospace;
+                font-size: clamp(36px, 8vw, 96px);
+                font-weight: 700;
+                color: #00ff41;
+                text-shadow: 0 0 20px #00ff41, 0 0 60px rgba(0,255,65,0.4);
+                letter-spacing: 8px;
+                opacity: 0;
+            }
+            .intro-title.show {
+                animation: introTitleIn 0.7s ease 0.3s forwards;
+            }
+            @keyframes introTitleIn {
+                from { opacity:0; transform:scale(1.08); filter:blur(10px); }
+                to   { opacity:1; transform:scale(1);   filter:blur(0); }
+            }
+            .intro-title .glitch-char { display: inline-block; }
+            .intro-title.show .glitch-char { animation: glitchChar 3.5s infinite; }
+            .intro-title.show .glitch-char:nth-child(2) { animation-delay:0.3s; color:#ff5555; }
+            .intro-title.show .glitch-char:nth-child(4) { animation-delay:0.7s; color:#58a6ff; }
+            .intro-title.show .glitch-char:nth-child(8) { animation-delay:1.2s; color:#f5a623; }
+            @keyframes glitchChar {
+                0%,88%,100% { transform:translate(0); filter:none; }
+                89%  { transform:translate(-2px,1px); filter:brightness(2); }
+                91%  { transform:translate(2px,-1px); filter:hue-rotate(90deg); }
+                93%  { transform:translate(-1px,2px); filter:brightness(0.5); }
+                95%  { transform:translate(1px,-1px); filter:none; }
+            }
+            .intro-subtitle {
+                font-family: "Share Tech Mono", monospace;
+                font-size: clamp(9px, 1.5vw, 13px);
+                color: rgba(0,255,65,0.6);
+                letter-spacing: 6px;
+                margin-top: 12px;
+                opacity: 0;
+            }
+            .intro-subtitle.show { animation: introFadeIn 0.5s ease 0.9s forwards; }
+            .intro-bar {
+                width: clamp(180px, 30vw, 340px);
+                height: 2px;
+                background: rgba(0,255,65,0.15);
+                margin-top: 40px;
+                opacity: 0;
+                position: relative;
+                overflow: hidden;
+            }
+            .intro-bar.show {
+                animation: introFadeIn 0.4s ease 1.1s forwards;
+            }
+            .intro-bar.show::after {
+                content: "";
+                position: absolute;
+                top:0; left:-100%;
+                width:100%; height:100%;
+                background: linear-gradient(90deg, transparent, #00ff41, transparent);
+                animation: introBarScan 2s ease 1.3s infinite;
+            }
+            @keyframes introBarScan {
+                from { left:-100%; } to { left:100%; }
+            }
+            /* DECRYPT button */
+            #intro-enter-btn {
+                margin-top: 36px;
+                font-family: "Share Tech Mono", monospace;
+                font-size: 13px;
+                letter-spacing: 6px;
+                color: #000;
+                background: #00ff41;
+                border: none;
+                padding: 14px 40px;
+                cursor: pointer;
+                opacity: 0;
+                transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+                clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            }
+            #intro-enter-btn.show {
+                animation: introFadeIn 0.5s ease 1.4s forwards;
+            }
+            #intro-enter-btn:hover {
+                background: #fff;
+                box-shadow: 0 0 20px rgba(0,255,65,0.6);
+            }
+            #intro-enter-btn:active {
+                transform: scale(0.97);
+            }
+            @keyframes introFadeIn { to { opacity: 1; } }
+            @keyframes introSkipPulse {
+                0%,100% { opacity:0.3; } 50% { opacity:0.8; }
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            /* ── Back to menu button ── */
+            .back-to-menu {
+                position: fixed;
+                top: 14px;
+                left: 16px;
+                z-index: 200;
+                background: transparent;
+                border: 1px solid var(--green-dim);
+                color: var(--green-dim);
+                font-family: "Share Tech Mono", monospace;
+                font-size: 10px;
+                letter-spacing: 3px;
+                padding: 6px 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .back-to-menu:hover {
+                border-color: var(--green);
+                color: var(--green);
+                background: rgba(0,255,65,0.06);
+                box-shadow: 0 0 10px rgba(0,255,65,0.15);
+            }
+
+            /* ── Home screen ── */
+            .home-center {
+                text-align: center;
+                padding: 30px 0;
+            }
+            .home-sub {
+                font-size: 11px;
+                letter-spacing: 4px;
+                color: var(--muted);
+                margin-bottom: 28px;
+            }
+            .start-btn {
+                padding: 16px 50px;
+                font-size: 14px;
+                letter-spacing: 4px;
+            }
+
+            /* ══════════════════════════════════════════
+               NEW GAME SCREEN LAYOUT
+               ══════════════════════════════════════════ */
+
+            /* Outer wrapper: robot | main col | (bot widget floats) */
+            .game-new-layout {
+                display: flex;
+                align-items: flex-start;
+                gap: 0;
+                padding: 18px 20px 18px 0;
+                position: relative;
+                min-height: 560px;
+            }
+
+            /* ── Acrylic box base ── */
+            .acrylic-box {
+                background: rgba(13,17,23,0.55);
+                backdrop-filter: blur(18px) saturate(1.4);
+                -webkit-backdrop-filter: blur(18px) saturate(1.4);
+                border: 1px solid rgba(0,255,65,0.18);
+                box-shadow:
+                    0 4px 32px rgba(0,0,0,0.45),
+                    inset 0 1px 0 rgba(255,255,255,0.04);
+                margin-bottom: 10px;
+            }
+
+            /* ── Main decode column ── */
+            .game-main-col {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            /* ① Corrupted text box */
+            .corrupted-box {
+                padding: 0;
+                position: relative;
+            }
+            .corrupted-box .corrupted-display {
+                border: none;
+                background: transparent;
+                min-height: 140px;
+                padding: 24px 28px 12px;
+            }
+
+            /* Word number labels row */
+            .word-numbers {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0;
+                padding: 4px 28px 10px;
+                border-top: 1px solid rgba(0,255,65,0.08);
+            }
+            .word-num-group {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-right: 14px;
+                margin-bottom: 4px;
+            }
+            .word-num-word {
+                font-size: clamp(13px,1.8vw,17px);
+                color: var(--red);
+                text-shadow: 0 0 6px rgba(255,85,85,0.4);
+                letter-spacing: 2px;
+                white-space: nowrap;
+            }
+            .word-num-idx {
+                font-size: 9px;
+                color: rgba(0,255,65,0.4);
+                letter-spacing: 1px;
+                margin-top: 2px;
+            }
+
+            /* Attempt dots — bottom-right of corrupted box */
+            .attempts-row-new {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 8px;
+                padding: 8px 16px 12px;
+            }
+
+            /* ② Hints box */
+            .hints-box {
+                padding: 14px 18px;
+            }
+            .hints-box-label {
+                font-size: 9px;
+                letter-spacing: 3px;
+                color: var(--muted);
+                margin-bottom: 10px;
+            }
+
+            /* ③ Input box */
+            .input-box {
+                padding: 12px 18px;
+            }
+            .input-box .input-row { margin-top: 0; }
+
+            /* ④ Action box */
+            .action-box {
+                padding: 10px 18px;
+                display: flex;
+                align-items: center;
+            }
+
+            /* ── Robot silhouette ── */
+            .robot-silhouette {
+                width: 90px;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 8px;
+                padding-right: 8px;
+                user-select: none;
+            }
+            .robot-pre {
+                font-family: 'Share Tech Mono', monospace;
+                font-size: 11px;
+                line-height: 1.4;
+                color: var(--red);
+                text-shadow: 0 0 8px rgba(255,85,85,0.6);
+                margin: 0;
+                white-space: pre;
+                animation: robotGlitch 3s infinite;
+            }
+            .robot-pre.solved {
+                color: var(--green);
+                text-shadow: 0 0 10px var(--green);
+                animation: none;
+            }
+            @keyframes robotGlitch {
+                0%,85%,100% { transform:none; filter:none; opacity:1; }
+                86% { transform:translate(-2px,1px); filter:hue-rotate(90deg); opacity:0.8; }
+                88% { transform:translate(2px,-1px); filter:brightness(2); opacity:0.9; }
+                90% { transform:translate(-1px,0); filter:none; opacity:0.7; }
+                92% { transform:none; opacity:1; }
+            }
+            .robot-eye {
+                color: var(--red);
+                transition: color 0.2s, text-shadow 0.2s;
+            }
+            .robot-eye.awake {
+                color: #00cfff;
+                text-shadow: 0 0 8px #00cfff;
+            }
+            .robot-eye.solved {
+                color: var(--green);
+                text-shadow: 0 0 8px var(--green);
+            }
+            .robot-label {
+                font-size: 8px;
+                letter-spacing: 2px;
+                color: rgba(255,85,85,0.4);
+                margin-top: 6px;
+                text-align: center;
+            }
+            .robot-label.solved {
+                color: rgba(0,255,65,0.5);
+            }
+
+            /* ── Bot widget (fixed bottom-right) ── */
+            .bot-widget {
+                position: fixed;
+                bottom: 28px;
+                right: 28px;
+                z-index: 90;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                background: rgba(13,17,23,0.75);
+                backdrop-filter: blur(14px);
+                border: 1px solid rgba(0,255,65,0.2);
+                padding: 14px 16px 12px;
+                cursor: pointer;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                width: 100px;
+            }
+            .bot-widget:hover {
+                border-color: var(--green);
+                box-shadow: 0 0 20px var(--green-glow);
+            }
+            .bot-widget.activated {
+                border-color: var(--green);
+                box-shadow: 0 0 16px var(--green-glow);
+                cursor: default;
+            }
+            .bot-widget-face {
+                text-align: center;
+            }
+            .bot-widget-eyes {
+                font-family: 'Share Tech Mono', monospace;
+                font-size: 18px;
+                letter-spacing: 4px;
+                color: var(--red);
+                line-height: 1;
+                margin-bottom: 2px;
+            }
+            .bot-w-eye {
+                transition: all 0.15s;
+                display: inline-block;
+            }
+            .bot-w-eye.awake {
+                color: #00cfff;
+                text-shadow: 0 0 8px #00cfff;
+            }
+            .bot-w-eye.activated {
+                color: var(--green);
+                text-shadow: 0 0 8px var(--green);
+            }
+            .bot-widget-label {
+                font-size: 8px;
+                letter-spacing: 2px;
+                color: var(--muted);
+                margin-top: 4px;
+            }
+            .bot-widget-cost {
+                font-size: 9px;
+                letter-spacing: 1px;
+                color: rgba(255,85,85,0.7);
+            }
+            .bot-widget-btn {
+                font-size: 9px;
+                padding: 6px 12px;
+                letter-spacing: 2px;
+                width: 100%;
+            }
+            .bot-widget.activated .bot-widget-cost,
+            .bot-widget.activated .bot-widget-btn {
+                display: none;
+            }
+            .bot-widget.activated .bot-widget-label {
+                color: var(--green);
+            }
+
+            /* ── Floating chat popup ── */
+            .bot-popup {
+                position: fixed;
+                bottom: 160px;
+                right: 28px;
+                width: 340px;
+                height: 420px;
+                z-index: 95;
+                display: flex;
+                flex-direction: column;
+                background: rgba(13,17,23,0.92);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--green);
+                box-shadow: 0 0 30px var(--green-glow), 0 8px 40px rgba(0,0,0,0.6);
+                animation: popupIn 0.25s ease;
+            }
+            @keyframes popupIn {
+                from { opacity:0; transform:translateY(12px) scale(0.97); }
+                to   { opacity:1; transform:none; }
+            }
+            .bot-popup.minimised {
+                height: auto;
+            }
+            .bot-popup.minimised .chat-messages,
+            .bot-popup.minimised .chat-input-bar {
+                display: none;
+            }
+            .bot-popup-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--border);
+                font-size: 10px;
+                letter-spacing: 2px;
+                color: var(--green);
+                flex-shrink: 0;
+            }
+            .bot-popup-min {
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--muted);
+                font-family: inherit;
+                font-size: 14px;
+                width: 22px; height: 22px;
+                cursor: pointer;
+                line-height: 1;
+                padding: 0;
+                display: flex; align-items: center; justify-content: center;
+                transition: color 0.2s, border-color 0.2s;
+            }
+            .bot-popup-min:hover { color: var(--green); border-color: var(--green); }
+            .bot-popup .chat-messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 12px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-height: 0;
+            }
+            .bot-popup .chat-input-bar {
+                display: flex;
+                border-top: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+
+
+                width: 5px;
+            }
+            ::-webkit-scrollbar-track {
+                background: var(--dark);
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--border);
+            }
+
+            /* ── Greeting message: compact keyword list ── */
+            .msg.bot.greeting {
+                font-size: 11px;
+                padding: 10px 12px;
+                line-height: 1.55;
+            }
+            .msg.bot.greeting p {
+                margin: 0 0 6px 0;
+            }
+            .msg.bot.greeting ul {
+                margin: 4px 0 0 0;
+                padding: 0;
+                list-style: none;
+            }
+            .msg.bot.greeting li {
+                padding: 2px 0;
+                color: rgba(0,255,65,0.75);
+                font-size: 10.5px;
+                border-bottom: 1px solid rgba(0,255,65,0.06);
+            }
+            .msg.bot.greeting li:last-child { border-bottom: none; }
+            .msg.bot.greeting code {
+                color: #58a6ff;
+                background: rgba(88,166,255,0.08);
+                border: 1px solid rgba(88,166,255,0.2);
+                padding: 1px 5px;
+                font-size: 10px;
+                letter-spacing: 0.5px;
+            }
+            /* Meta line (word count · category · defs) */
+            .msg.bot.greeting .meta-line {
+                font-size: 11px;
+                color: var(--green);
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid rgba(0,255,65,0.12);
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Matrix rain canvas -->
+        <canvas id="matrix-canvas"></canvas>
+
+        <!-- ── BACK TO MENU BUTTON ── -->
+        <button class="back-to-menu" onclick="window.location.href = '/'">
+            ← MENU
+        </button>
+
+        <div class="app">
+            <div class="terminal">
+                <!-- Header -->
+                <div class="header">
+                    <h1>DeC4rɹoD€</h1>
+                    <div class="header-sub">
+                        [ SENTENCE DECRYPTION PROTOCOL ]
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-bar">
+                    <div class="stat">
+                        <span class="stat-val" id="s-score">0</span>
+                        <span class="stat-lbl">Score</span>
+                    </div>
+                    <div class="stat">
+                        <span
+                            class="stat-val"
+                            id="s-streak"
+                            style="
+                                color: var(--red);
+                                text-shadow: 0 0 8px var(--red);
+                            "
+                            >0</span
+                        >
+                        <span class="stat-lbl">Streak 🔥</span>
+                    </div>
+                    <div class="stat">
+                        <span
+                            class="stat-val"
+                            id="s-best"
+                            style="
+                                color: #f5a623;
+                                text-shadow: 0 0 8px rgba(245, 166, 35, 0.6);
+                            "
+                            >0</span
+                        >
+                        <span class="stat-lbl">Best Streak ⭐</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-val" id="s-round">0</span>
+                        <span class="stat-lbl">Round</span>
+                    </div>
+                    <div class="stat">
+                        <span
+                            class="stat-val"
+                            id="s-wr"
+                            style="
+                                color: var(--blue);
+                                text-shadow: 0 0 8px var(--blue);
+                            "
+                            >—</span
+                        >
+                        <span class="stat-lbl">Win Rate</span>
+                    </div>
+                </div>
+
+                <!-- HOME SCREEN -->
+                <div id="home-screen">
+                    <div class="panel">
+                        <div class="panel-title green">
+                            // NEXEON GALAXY — SELECT MISSION
+                        </div>
+                        <div class="home-center">
+                            <div class="home-sub" id="nexeon-subtitle">
+                                CHOOSE A NEXEON TO DECRYPT
+                            </div>
+
+                            <!-- Network map -->
+                            <div class="nexeon-map-wrap">
+                                <!-- World map background -->
+                                <div class="nexeon-map-bg">
+                                    <svg
+                                        viewBox="0 0 1000 500"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        preserveAspectRatio="xMidYMid slice"
+                                    >
+                                        <!-- Equator & prime meridian grid lines -->
+                                        <line
+                                            x1="0"
+                                            y1="250"
+                                            x2="1000"
+                                            y2="250"
+                                            stroke="#00ff41"
+                                            stroke-width="0.5"
+                                            opacity="0.4"
+                                        />
+                                        <line
+                                            x1="500"
+                                            y1="0"
+                                            x2="500"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.5"
+                                            opacity="0.4"
+                                        />
+                                        <!-- Tropics -->
+                                        <line
+                                            x1="0"
+                                            y1="190"
+                                            x2="1000"
+                                            y2="190"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            stroke-dasharray="6,8"
+                                            opacity="0.25"
+                                        />
+                                        <line
+                                            x1="0"
+                                            y1="310"
+                                            x2="1000"
+                                            y2="310"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            stroke-dasharray="6,8"
+                                            opacity="0.25"
+                                        />
+                                        <!-- Arctic circles -->
+                                        <line
+                                            x1="0"
+                                            y1="95"
+                                            x2="1000"
+                                            y2="95"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            stroke-dasharray="3,12"
+                                            opacity="0.18"
+                                        />
+                                        <line
+                                            x1="0"
+                                            y1="405"
+                                            x2="1000"
+                                            y2="405"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            stroke-dasharray="3,12"
+                                            opacity="0.18"
+                                        />
+
+                                        <!-- NORTH AMERICA -->
+                                        <path
+                                            d="M 80 60 L 100 55 L 130 58 L 155 65 L 170 80 L 180 95 L 175 115 L 165 130 L 155 145 L 148 165 L 152 180 L 160 190 L 168 200 L 165 215 L 155 230 L 148 245 L 150 255 L 158 262 L 155 272 L 145 278 L 135 285 L 128 295 L 122 285 L 115 275 L 108 265 L 100 255 L 88 245 L 78 240 L 68 248 L 58 255 L 50 252 L 45 242 L 48 230 L 55 222 L 58 210 L 52 198 L 45 188 L 40 175 L 42 160 L 50 148 L 55 135 L 52 120 L 48 108 L 50 95 L 58 82 L 68 72 Z"
+                                            fill="#00ff41"
+                                            opacity="0.7"
+                                        />
+                                        <!-- Greenland -->
+                                        <path
+                                            d="M 195 28 L 220 22 L 245 25 L 262 38 L 268 55 L 260 68 L 248 75 L 232 78 L 215 72 L 200 60 L 192 45 Z"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+                                        <!-- Central America / Caribbean -->
+                                        <path
+                                            d="M 148 278 L 158 285 L 162 295 L 158 305 L 150 308 L 142 302 L 138 290 L 140 280 Z"
+                                            fill="#00ff41"
+                                            opacity="0.6"
+                                        />
+                                        <circle
+                                            cx="172"
+                                            cy="288"
+                                            r="3"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+                                        <circle
+                                            cx="180"
+                                            cy="282"
+                                            r="2.5"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+                                        <circle
+                                            cx="188"
+                                            cy="278"
+                                            r="2"
+                                            fill="#00ff41"
+                                            opacity="0.45"
+                                        />
+
+                                        <!-- SOUTH AMERICA -->
+                                        <path
+                                            d="M 165 310 L 180 305 L 200 308 L 218 315 L 230 328 L 238 345 L 240 365 L 235 385 L 225 402 L 212 418 L 200 428 L 192 440 L 188 455 L 180 462 L 172 455 L 168 440 L 165 425 L 160 410 L 155 392 L 152 372 L 150 352 L 152 335 L 158 320 Z"
+                                            fill="#00ff41"
+                                            opacity="0.7"
+                                        />
+
+                                        <!-- EUROPE -->
+                                        <path
+                                            d="M 450 65 L 468 60 L 488 58 L 508 62 L 520 72 L 528 85 L 525 98 L 515 108 L 502 115 L 492 125 L 485 138 L 478 148 L 470 155 L 460 158 L 450 155 L 440 148 L 432 138 L 428 125 L 430 112 L 435 100 L 440 88 L 445 75 Z"
+                                            fill="#00ff41"
+                                            opacity="0.7"
+                                        />
+                                        <!-- Scandinavia -->
+                                        <path
+                                            d="M 470 38 L 490 32 L 510 35 L 525 48 L 520 62 L 508 62 L 488 58 L 468 60 L 460 50 Z"
+                                            fill="#00ff41"
+                                            opacity="0.6"
+                                        />
+                                        <!-- British Isles -->
+                                        <path
+                                            d="M 425 72 L 438 68 L 445 75 L 442 85 L 432 88 L 422 82 Z"
+                                            fill="#00ff41"
+                                            opacity="0.55"
+                                        />
+                                        <path
+                                            d="M 415 78 L 422 74 L 426 80 L 420 86 L 413 83 Z"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+                                        <!-- Iberian Peninsula -->
+                                        <path
+                                            d="M 428 148 L 445 145 L 458 150 L 462 165 L 455 178 L 442 182 L 428 178 L 420 165 L 422 152 Z"
+                                            fill="#00ff41"
+                                            opacity="0.65"
+                                        />
+
+                                        <!-- AFRICA -->
+                                        <path
+                                            d="M 452 185 L 478 180 L 505 182 L 528 190 L 545 205 L 558 225 L 565 248 L 568 272 L 565 298 L 558 322 L 548 345 L 535 368 L 520 388 L 505 402 L 492 412 L 480 418 L 468 412 L 458 398 L 448 380 L 440 358 L 435 335 L 432 310 L 432 285 L 435 260 L 440 238 L 445 218 L 448 200 Z"
+                                            fill="#00ff41"
+                                            opacity="0.72"
+                                        />
+                                        <!-- Madagascar -->
+                                        <path
+                                            d="M 572 342 L 582 335 L 590 342 L 592 358 L 588 372 L 578 378 L 570 370 L 568 355 Z"
+                                            fill="#00ff41"
+                                            opacity="0.55"
+                                        />
+
+                                        <!-- ASIA (main body) -->
+                                        <path
+                                            d="M 535 55 L 568 48 L 605 42 L 645 38 L 685 40 L 722 45 L 758 52 L 788 62 L 812 75 L 828 90 L 835 108 L 832 128 L 822 145 L 808 158 L 792 168 L 775 175 L 758 180 L 740 182 L 722 185 L 705 188 L 688 190 L 672 192 L 655 195 L 638 200 L 622 208 L 608 218 L 595 230 L 582 242 L 570 255 L 560 268 L 552 280 L 548 292 L 545 305 L 542 295 L 538 282 L 535 268 L 532 252 L 530 235 L 528 218 L 528 200 L 530 182 L 532 165 L 532 148 L 530 132 L 528 115 L 528 98 L 530 82 L 533 68 Z"
+                                            fill="#00ff41"
+                                            opacity="0.68"
+                                        />
+                                        <!-- Indian subcontinent -->
+                                        <path
+                                            d="M 628 222 L 648 218 L 665 225 L 678 238 L 685 255 L 682 272 L 672 285 L 658 295 L 642 298 L 628 292 L 618 278 L 615 262 L 618 245 L 622 232 Z"
+                                            fill="#00ff41"
+                                            opacity="0.65"
+                                        />
+                                        <!-- Southeast Asia peninsulas -->
+                                        <path
+                                            d="M 712 240 L 728 235 L 742 240 L 750 255 L 748 270 L 738 280 L 724 282 L 712 275 L 706 260 L 708 248 Z"
+                                            fill="#00ff41"
+                                            opacity="0.6"
+                                        />
+                                        <!-- Japan -->
+                                        <path
+                                            d="M 808 118 L 820 112 L 832 118 L 835 132 L 828 142 L 815 145 L 805 138 L 802 125 Z"
+                                            fill="#00ff41"
+                                            opacity="0.58"
+                                        />
+                                        <path
+                                            d="M 822 148 L 832 142 L 840 148 L 842 162 L 835 170 L 824 168 L 818 158 Z"
+                                            fill="#00ff41"
+                                            opacity="0.55"
+                                        />
+                                        <!-- Philippines -->
+                                        <circle
+                                            cx="768"
+                                            cy="272"
+                                            r="4"
+                                            fill="#00ff41"
+                                            opacity="0.52"
+                                        />
+                                        <circle
+                                            cx="775"
+                                            cy="282"
+                                            r="3"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+                                        <circle
+                                            cx="762"
+                                            cy="285"
+                                            r="3.5"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+
+                                        <!-- RUSSIA (extend north of Asia) -->
+                                        <path
+                                            d="M 530 35 L 568 28 L 615 22 L 665 18 L 712 20 L 755 25 L 792 32 L 822 38 L 845 48 L 852 62 L 848 78 L 835 88 L 820 85 L 802 80 L 780 72 L 755 65 L 728 58 L 700 52 L 670 48 L 638 45 L 608 45 L 578 48 L 552 52 L 532 55 Z"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+
+                                        <!-- AUSTRALIA -->
+                                        <path
+                                            d="M 748 345 L 775 338 L 805 335 L 832 340 L 855 352 L 872 368 L 880 388 L 878 408 L 868 425 L 850 438 L 828 445 L 805 445 L 782 438 L 762 425 L 748 408 L 740 388 L 738 368 L 742 352 Z"
+                                            fill="#00ff41"
+                                            opacity="0.68"
+                                        />
+                                        <!-- New Zealand -->
+                                        <path
+                                            d="M 895 405 L 908 398 L 915 408 L 912 422 L 902 428 L 892 420 Z"
+                                            fill="#00ff41"
+                                            opacity="0.52"
+                                        />
+                                        <path
+                                            d="M 905 430 L 915 425 L 920 435 L 915 448 L 905 452 L 898 442 Z"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+
+                                        <!-- Iceland -->
+                                        <path
+                                            d="M 382 52 L 400 46 L 415 50 L 418 62 L 410 70 L 395 72 L 382 65 Z"
+                                            fill="#00ff41"
+                                            opacity="0.5"
+                                        />
+
+                                        <!-- Latitude longitude grid (very faint) -->
+                                        <line
+                                            x1="150"
+                                            y1="0"
+                                            x2="150"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="300"
+                                            y1="0"
+                                            x2="300"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="400"
+                                            y1="0"
+                                            x2="400"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="600"
+                                            y1="0"
+                                            x2="600"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="700"
+                                            y1="0"
+                                            x2="700"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="800"
+                                            y1="0"
+                                            x2="800"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="900"
+                                            y1="0"
+                                            x2="900"
+                                            y2="500"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="0"
+                                            y1="125"
+                                            x2="1000"
+                                            y2="125"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                        <line
+                                            x1="0"
+                                            y1="375"
+                                            x2="1000"
+                                            y2="375"
+                                            stroke="#00ff41"
+                                            stroke-width="0.3"
+                                            opacity="0.1"
+                                        />
+                                    </svg>
+                                </div>
+                                <div class="nexeon-map-scanlines"></div>
+                                <div class="nexeon-map-grid"></div>
+                                <canvas id="nexeon-canvas"></canvas>
+                            </div>
+
+                            <!-- Selected nexeon info bar (below map) -->
+                            <div
+                                class="nexeon-info-bar locked-bar"
+                                id="nexeon-info-bar"
+                            >
+                                <span
+                                    style="letter-spacing: 3px; font-size: 11px"
+                                    id="nib-name"
+                                    >NO NEXEON SELECTED</span
+                                >
+                            </div>
+
+                            <button
+                                class="btn start-btn"
+                                id="start-btn"
+                                onclick="startRound()"
+                                disabled
+                                style="opacity: 0.4"
+                            >
+                                ▶ INITIATE DECRYPTION
+                            </button>
+                            <div
+                                class="log"
+                                style="margin-top: 10px; font-size: 9px"
+                            >
+                                WIN 60% OF 51 SENTENCES TO UNLOCK NEXT NEXEON //
+                                5 ATTEMPTS // AI BOT (-250 PTS)
+                            </div>
+
+                            <!-- How to Play + Progress Management -->
+                            <div
+                                style="
+                                    margin-top: 16px;
+                                    display: flex;
+                                    justify-content: center;
+                                "
+                            >
+                                <button
+                                    class="btn-ghost btn"
+                                    onclick="showHelp()"
+                                    style="
+                                        font-size: 11px;
+                                        padding: 9px 24px;
+                                        letter-spacing: 3px;
+                                        border-color: rgba(0, 255, 65, 0.3);
+                                    "
+                                >
+                                    ? HOW TO PLAY
+                                </button>
+                            </div>
+                            <div
+                                style="
+                                    margin-top: 20px;
+                                    border-top: 1px solid var(--border);
+                                    padding-top: 16px;
+                                "
+                            >
+                                <div
+                                    style="
+                                        font-size: 10px;
+                                        letter-spacing: 3px;
+                                        color: var(--muted);
+                                        margin-bottom: 10px;
+                                    "
+                                >
+                                    // PROGRESS MANAGEMENT
+                                </div>
+                                <div
+                                    style="
+                                        display: flex;
+                                        gap: 8px;
+                                        justify-content: center;
+                                        flex-wrap: wrap;
+                                    "
+                                >
+                                    <button
+                                        class="btn"
+                                        style="
+                                            font-size: 11px;
+                                            padding: 9px 18px;
+                                            letter-spacing: 2px;
+                                        "
+                                        onclick="saveProgress()"
+                                    >
+                                        💾 SAVE
+                                    </button>
+                                    <button
+                                        class="btn-blue btn"
+                                        style="
+                                            font-size: 11px;
+                                            padding: 9px 18px;
+                                            letter-spacing: 2px;
+                                        "
+                                        onclick="exportProgress()"
+                                    >
+                                        📤 EXPORT
+                                    </button>
+                                    <button
+                                        class="btn-blue btn"
+                                        style="
+                                            font-size: 11px;
+                                            padding: 9px 18px;
+                                            letter-spacing: 2px;
+                                        "
+                                        onclick="
+                                            document
+                                                .getElementById('import-input')
+                                                .click()
+                                        "
+                                    >
+                                        📥 IMPORT
+                                    </button>
+                                    <button
+                                        class="btn-ghost btn"
+                                        style="
+                                            font-size: 10px;
+                                            padding: 9px 14px;
+                                            opacity: 0.5;
+                                        "
+                                        onclick="resetProgress()"
+                                    >
+                                        ⚠ RESET
+                                    </button>
+                                </div>
+                                <input
+                                    type="file"
+                                    id="import-input"
+                                    accept=".json,.sav"
+                                    style="display: none"
+                                    onchange="importProgress(event)"
+                                />
+                                <div
+                                    id="save-status"
+                                    style="
+                                        font-size: 10px;
+                                        color: var(--muted);
+                                        margin-top: 10px;
+                                        letter-spacing: 1px;
+                                        min-height: 16px;
+                                    "
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GAME SCREEN -->
+                <div id="game-screen" class="hidden">
+                    <!-- Game header bar -->
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            padding: 10px 20px;
+                            border-bottom: 1px solid var(--border);
+                            gap: 12px;
+                        "
+                    >
+                        <button
+                            onclick="goHome()"
+                            class="btn-ghost btn"
+                            style="
+                                font-size: 11px;
+                                padding: 6px 14px;
+                                letter-spacing: 2px;
+                            "
+                        >
+                            ← MENU
+                        </button>
+                        <span
+                            class="panel-title red"
+                            style="
+                                margin: 0;
+                                padding: 0;
+                                border: none;
+                                font-size: 11px;
+                            "
+                        >
+                            // WARNING: DATA CORRUPTION DETECTED
+                        </span>
+                        <span
+                            id="game-category-label"
+                            style="
+                                margin-left: auto;
+                                font-size: 10px;
+                                letter-spacing: 2px;
+                                color: var(--muted);
+                            "
+                        ></span>
+                    </div>
+
+                    <!-- ── NEW SINGLE-COLUMN GAME LAYOUT ── -->
+                    <div class="game-new-layout">
+                        <!-- Robot silhouette (always visible left side) -->
+                        <div class="robot-silhouette" id="robot-silhouette">
+                            <div class="robot-ascii" id="robot-ascii">
+                                <pre class="robot-pre" id="robot-pre">
+  ╔═══╗
+  ║<span class="robot-eye" id="eye-l">_</span> <span class="robot-eye" id="eye-r">_</span>║
+  ╚═╦═╝
+  ┌─╩─┐
+  │<span id="robot-mouth">───</span>│
+  └─┬─┘
+ ┌──┴──┐
+ │     │
+ └──┬──┘
+  ┌─┴─┐
+  │   │
+  ▀   ▀</pre>
+                            </div>
+                            <div class="robot-label" id="robot-label">
+                                // AI TARGET
+                            </div>
+                        </div>
+
+                        <!-- Main decode area -->
+                        <div class="game-main-col">
+                            <!-- ① Corrupted text box (acrylic) -->
+                            <div class="acrylic-box corrupted-box">
+                                <div
+                                    class="corrupted-display"
+                                    id="corrupted-text"
+                                >
+                                    AWAITING DATA STREAM...
+                                </div>
+                                <!-- Word number labels — shown after 3 hints revealed or bot purchased -->
+                                <div
+                                    class="word-numbers hidden"
+                                    id="word-numbers"
+                                ></div>
+                                <!-- Attempt dots — bottom right of this box -->
+                                <div class="attempts-row-new">
+                                    <div
+                                        id="attempt-dots"
+                                        style="display: flex; gap: 8px"
+                                    >
+                                        <div class="dot" data-dot="1"></div>
+                                        <div class="dot" data-dot="2"></div>
+                                        <div class="dot" data-dot="3"></div>
+                                        <div class="dot" data-dot="4"></div>
+                                        <div class="dot" data-dot="5"></div>
+                                    </div>
+                                    <span class="pts-badge" id="pts-badge"
+                                        >+300 PTS</span
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- ② Hints box (acrylic) -->
+                            <div class="acrylic-box hints-box">
+                                <div class="hints-box-label">// INTEL FEED</div>
+                                <div class="hints-section" id="hints-area">
+                                    <div
+                                        style="
+                                            font-size: 10px;
+                                            color: var(--muted);
+                                            letter-spacing: 1px;
+                                        "
+                                    >
+                                        Hints unlock after wrong attempts...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ③ Input box (acrylic) -->
+                            <div class="acrylic-box input-box">
+                                <div class="input-row">
+                                    <input
+                                        type="text"
+                                        id="guess-input"
+                                        placeholder="TYPE DECODED SENTENCE..."
+                                        autocomplete="off"
+                                        spellcheck="false"
+                                        onkeydown="
+                                            if (event.key === 'Enter')
+                                                submitGuess();
+                                        "
+                                    />
+                                    <button class="btn" onclick="submitGuess()">
+                                        DECODE
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ④ Action buttons row -->
+                            <div class="acrylic-box action-box">
+                                <div
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: space-between;
+                                        width: 100%;
+                                    "
+                                >
+                                    <button
+                                        class="btn-ghost btn"
+                                        onclick="skipRound()"
+                                        style="
+                                            font-size: 11px;
+                                            letter-spacing: 2px;
+                                        "
+                                    >
+                                        ⏭ SKIP
+                                    </button>
+                                    <span
+                                        style="
+                                            font-size: 9px;
+                                            color: var(--muted);
+                                            letter-spacing: 1px;
+                                        "
+                                    >
+                                        5 ATTEMPTS · 3 HINTS · AI BOT (-250 PTS)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /game-main-col -->
+
+                        <!-- Bot widget (bottom-right, always visible) -->
+                        <div
+                            class="bot-widget"
+                            id="bot-widget"
+                            onmouseenter="botWakeEyes()"
+                            onmouseleave="botSleepEyes()"
+                        >
+                            <div class="bot-widget-face" id="bot-widget-face">
+                                <div class="bot-widget-eyes">
+                                    <span class="bot-w-eye" id="bw-eye-l"
+                                        >_</span
+                                    >
+                                    <span class="bot-w-eye" id="bw-eye-r"
+                                        >_</span
+                                    >
+                                </div>
+                                <div
+                                    class="bot-widget-label"
+                                    id="bot-widget-label"
+                                >
+                                    AI BOT
+                                </div>
+                            </div>
+                            <div class="bot-widget-cost" id="bot-widget-cost">
+                                -250 PTS
+                            </div>
+                            <button
+                                class="btn bot-widget-btn"
+                                id="btn-bot"
+                                onclick="activateBot()"
+                            >
+                                UNLOCK
+                            </button>
+                        </div>
+                    </div>
+                    <!-- /game-new-layout -->
+                </div>
+                <!-- /game-screen -->
+
+                <!-- ── FLOATING CHAT POPUP (outside game columns, fixed position) ── -->
+                <div class="bot-popup hidden" id="bot-popup">
+                    <div class="bot-popup-header">
+                        <span>🤖 AI ASSISTANT</span>
+                        <div
+                            style="display: flex; gap: 8px; align-items: center"
+                        >
+                            <span class="bot-turns" id="turns-left"
+                                >8 QUERIES LEFT</span
+                            >
+                            <button
+                                class="bot-popup-min"
+                                id="bot-popup-min"
+                                onclick="toggleBotPopup()"
+                                title="Minimise"
+                            >
+                                ─
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-bar">
+                        <input
+                            type="text"
+                            id="chat-input"
+                            placeholder="Ask about a word, topic, synonym..."
+                            onkeydown="if (event.key === 'Enter') sendChat();"
+                        />
+                        <button onclick="sendChat()">SEND</button>
+                    </div>
+                </div>
+            </div>
+            <!-- /terminal -->
+        </div>
+        <!-- /app -->
+
+        <!-- Result overlay -->
+        <div class="overlay hidden" id="result-overlay">
+            <div class="result-box" id="result-box">
+                <span class="result-icon" id="r-icon"></span>
+                <div class="result-title" id="r-title"></div>
+                <div class="result-sub" id="r-sub"></div>
+                <div class="result-answer" id="r-answer"></div>
+                <div class="result-pts" id="r-pts"></div>
+                <button
+                    class="btn"
+                    style="
+                        margin-top: 20px;
+                        padding: 14px 40px;
+                        letter-spacing: 3px;
+                    "
+                    onclick="nextRound()"
+                >
+                    NEXT TRANSMISSION ▶
+                </button>
+                <button
+                    class="btn-ghost btn"
+                    style="
+                        margin-top: 10px;
+                        padding: 10px 28px;
+                        letter-spacing: 3px;
+                        font-size: 11px;
+                        opacity: 0.7;
+                    "
+                    onclick="menuFromResult()"
+                >
+                    ← GALAXY MAP
+                </button>
+            </div>
+        </div>
+
+        <script>
+            // ══════════════════════════════════════════
+            //  MATRIX RAIN
+            // ══════════════════════════════════════════
+            (function () {
+                const canvas = document.getElementById("matrix-canvas");
+                const ctx = canvas.getContext("2d");
+                const chars =
+                    "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF><{}[]|/\\#@$%^&*!";
+                let cols, drops;
+
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    cols = Math.floor(canvas.width / 18);
+                    drops = Array(cols).fill(1);
+                }
+
+                function draw() {
+                    ctx.fillStyle = "rgba(13,17,23,0.05)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = "15px Share Tech Mono, monospace";
+                    for (let i = 0; i < cols; i++) {
+                        const ch =
+                            chars[Math.floor(Math.random() * chars.length)];
+                        ctx.fillStyle = "#aaffbb";
+                        ctx.fillText(ch, i * 18, drops[i] * 18);
+                        const trail =
+                            chars[Math.floor(Math.random() * chars.length)];
+                        ctx.fillStyle = "#00ff41";
+                        ctx.fillText(trail, i * 18, (drops[i] - 1) * 18);
+                        if (
+                            drops[i] * 18 > canvas.height &&
+                            Math.random() > 0.975
+                        )
+                            drops[i] = 0;
+                        drops[i]++;
+                    }
+                }
+                window.addEventListener("resize", resize);
+                resize();
+                setInterval(draw, 45);
+            })();
+
+            // ══════════════════════════════════════════
+            //  GAME LOGIC
+            // ══════════════════════════════════════════
+            // ── INTRO SCREEN ─────────────────────────────────────────────
+            let _introMatrixRAF = null;
+            let _introMatrixRunning = false;
+
+            function startIntroMatrix() {
+                const canvas = document.getElementById("intro-canvas");
+                if (!canvas) return;
+                const ctx = canvas.getContext("2d");
+                const chars =
+                    "アイウエオカキクケコサシスセソ0123456789ABCDEF><{}[]|/\\#@$%^&*!DeC4rɹoD€";
+                let cols, drops;
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    cols = Math.floor(canvas.width / 16);
+                    drops = Array(cols).fill(1);
+                }
+                function drawIntro() {
+                    if (!_introMatrixRunning) return;
+                    ctx.fillStyle = "rgba(0,0,0,0.05)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = '14px "Share Tech Mono", monospace';
+                    for (let i = 0; i < cols; i++) {
+                        const ch =
+                            chars[Math.floor(Math.random() * chars.length)];
+                        ctx.fillStyle =
+                            i % 7 === 0
+                                ? "rgba(88,166,255,0.7)"
+                                : i % 5 === 0
+                                  ? "rgba(245,166,35,0.5)"
+                                  : "#00ff41";
+                        ctx.fillText(ch, i * 16, drops[i] * 16);
+                        if (
+                            drops[i] * 16 > canvas.height &&
+                            Math.random() > 0.975
+                        )
+                            drops[i] = 0;
+                        drops[i]++;
+                    }
+                    _introMatrixRAF = requestAnimationFrame(drawIntro);
+                }
+                resize();
+                window.addEventListener("resize", resize);
+                _introMatrixRunning = true;
+                drawIntro();
+            }
+
+            function showTitleCard() {
+                const vid = document.getElementById("intro-video");
+                const skipBtn = document.getElementById("intro-video-skip");
+                if (vid) {
+                    vid.pause();
+                    vid.classList.remove("visible");
+                }
+                if (skipBtn) skipBtn.style.display = "none";
+
+                startIntroMatrix();
+                const introCanvas = document.getElementById("intro-canvas");
+                if (introCanvas) introCanvas.classList.add("visible");
+                document
+                    .querySelectorAll(".intro-scanline")
+                    .forEach((e) => e.classList.add("visible"));
+                document
+                    .querySelectorAll(".intro-vignette")
+                    .forEach((e) => e.classList.add("visible"));
+                document
+                    .querySelectorAll(".intro-corner")
+                    .forEach((e) => e.classList.add("show"));
+                document
+                    .querySelectorAll(".intro-side-text")
+                    .forEach((e) => e.classList.add("show"));
+
+                const contentEl = document.getElementById("intro-content");
+                const bootEl = document.getElementById("intro-boot-log");
+                const titleEl = document.getElementById("intro-title");
+                const subEl = document.getElementById("intro-subtitle");
+                const barEl = document.getElementById("intro-bar");
+                const btnEl = document.getElementById("intro-enter-btn");
+
+                if (contentEl) contentEl.classList.add("visible");
+
+                const bootLines = [
+                    "// CIPHER ENGINE READY",
+                    "// KB: 1785 ENTRIES LOADED",
+                    "// GAN CORRUPTION: ACTIVE",
+                    "// PRESS INITIALISE TO BEGIN",
+                ];
+                let lineIdx = 0;
+                if (bootEl) bootEl.classList.add("show");
+                window._introBootTimer = setInterval(() => {
+                    if (bootEl)
+                        bootEl.textContent =
+                            bootLines[++lineIdx % bootLines.length];
+                }, 700);
+
+                setTimeout(() => {
+                    if (titleEl) titleEl.classList.add("show");
+                }, 200);
+                setTimeout(() => {
+                    if (subEl) subEl.classList.add("show");
+                }, 600);
+                setTimeout(() => {
+                    if (barEl) barEl.classList.add("show");
+                }, 900);
+                setTimeout(() => {
+                    if (btnEl) btnEl.classList.add("show");
+                }, 1100);
+            }
+
+            function skipIntro() {
+                const el = document.getElementById("intro-screen");
+                if (!el || el.classList.contains("fade-out")) return;
+                _introMatrixRunning = false;
+                if (_introMatrixRAF) cancelAnimationFrame(_introMatrixRAF);
+                if (window._introBootTimer)
+                    clearInterval(window._introBootTimer);
+                el.classList.add("fade-out");
+                setTimeout(() => {
+                    if (el.parentNode) el.remove();
+                }, 750);
+            }
+
+            // ── Nexeon state ─────────────────────────────────────────────────
+            let currentNexeon = 1;
+            let nexeonData = []; // array from /api/nexeons
+
+            // ── Nexeon icons (one per nexeon id) ─────────────────────────────
+            const NEX_ICONS = [
+                "🌑",
+                "⚡",
+                "🔥",
+                "🌊",
+                "🧊",
+                "🌪️",
+                "☄️",
+                "🌙",
+                "⭐",
+                "🌠",
+                "🔮",
+                "🧲",
+                "💎",
+                "🛸",
+                "🌌",
+                "🏔️",
+                "🌋",
+                "🔭",
+                "🧬",
+                "⚗️",
+                "🗺️",
+                "🏺",
+                "📜",
+                "🎭",
+                "🎯",
+                "🔑",
+                "🗝️",
+                "⚔️",
+                "🛡️",
+                "🌐",
+                "🧩",
+                "🎲",
+                "🔱",
+                "♾️",
+                "🏆",
+            ];
+
+            // ── Helpers ──────────────────────────────────────────────────────
+            async function api(path, method = "GET", body = null) {
+                const opts = {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                };
+                if (body) opts.body = JSON.stringify(body);
+                try {
+                    const r = await fetch("/game1/api" + path, opts);
+                    return await r.json();
+                } catch (e) {
+                    return { error: e.message };
+                }
+            }
+
+            function toast(msg, type = "ok") {
+                const t = document.createElement("div");
+                t.className = "toast toast-" + type;
+                t.textContent = msg;
+                document.body.appendChild(t);
+                setTimeout(() => t.remove(), 3000);
+            }
+
+            function updateStats(score, streak, round, wr, best) {
+                if (score !== null && score !== undefined)
+                    document.getElementById("s-score").textContent = score;
+                if (streak !== null && streak !== undefined)
+                    document.getElementById("s-streak").textContent = streak;
+                if (round !== null && round !== undefined)
+                    document.getElementById("s-round").textContent = round;
+                if (best !== null && best !== undefined)
+                    document.getElementById("s-best").textContent = best;
+                if (wr !== null && wr !== undefined)
+                    document.getElementById("s-wr").textContent =
+                        wr === "—" ? "—" : wr + "%";
+            }
+
+            // ── Nexeon map renderer ──────────────────────────────────────────
+            function nexState(nex) {
+                if (nex.completed) return "complete";
+                if (!nex.unlocked) return "locked";
+                if (nex.id === currentNexeon) return "active";
+                if (nex.played > 0) return "inprogress";
+                return "unlocked";
+            }
+
+            // ── Network map ──────────────────────────────────────────────
+            // Stable random positions seeded by nexeon id
+            function seededRandom(seed) {
+                let s = seed * 9301 + 49297;
+                return (s % 233280) / 233280;
+            }
+
+            let _netPositions = null; // cached positions
+            let _hoveredNex = null;
+            let _canvasNexeons = [];
+
+            function buildNetPositions(count, W, H) {
+                // Generate random positions with minimum spacing using seeded rand
+                const PAD = 40,
+                    MIN_DIST = 60;
+                const positions = [];
+                const attempts = 1000;
+                for (let i = 0; i < count; i++) {
+                    let best = null,
+                        bestDist = -1;
+                    for (let t = 0; t < attempts; t++) {
+                        const x =
+                            PAD + seededRandom(i * 37 + t * 13) * (W - PAD * 2);
+                        const y =
+                            PAD + seededRandom(i * 53 + t * 17) * (H - PAD * 2);
+                        let minD = Infinity;
+                        for (const p of positions) {
+                            const d = Math.hypot(x - p.x, y - p.y);
+                            if (d < minD) minD = d;
+                        }
+                        if (minD > bestDist) {
+                            bestDist = minD;
+                            best = { x, y };
+                        }
+                        if (minD >= MIN_DIST) break;
+                    }
+                    positions.push(best);
+                }
+                return positions;
+            }
+
+            function nodeColor(nex) {
+                if (nex.completed)
+                    return {
+                        fill: "#00ff41",
+                        stroke: "#00ff41",
+                        glow: "rgba(0,255,65,0.6)",
+                        r: 12,
+                    };
+                if (!nex.unlocked)
+                    return {
+                        fill: "#1a0a0a",
+                        stroke: "#cc2200",
+                        glow: "rgba(200,30,0,0.3)",
+                        r: 9,
+                    };
+                if (nex.id === currentNexeon)
+                    return {
+                        fill: "#1a3a6a",
+                        stroke: "#58a6ff",
+                        glow: "rgba(88,166,255,0.7)",
+                        r: 13,
+                    };
+                if (nex.played > 0)
+                    return {
+                        fill: "#002244",
+                        stroke: "#58a6ff",
+                        glow: "rgba(88,166,255,0.4)",
+                        r: 10,
+                    };
+                return {
+                    fill: "#001a44",
+                    stroke: "#2266aa",
+                    glow: "rgba(88,166,255,0.2)",
+                    r: 9,
+                };
+            }
+
+            function lineColor(a, b) {
+                // Solid, visible colours matching node states
+                if (a.completed)
+                    return {
+                        stroke: "#00ff41",
+                        width: 2,
+                        dash: [],
+                        alpha: 0.8,
+                    };
+                if (a.unlocked && b.unlocked)
+                    return {
+                        stroke: "#58a6ff",
+                        width: 1.8,
+                        dash: [],
+                        alpha: 0.7,
+                    };
+                if (a.unlocked)
+                    return {
+                        stroke: "#58a6ff",
+                        width: 1.2,
+                        dash: [6, 5],
+                        alpha: 0.45,
+                    };
+                return {
+                    stroke: "#cc2200",
+                    width: 1,
+                    dash: [4, 6],
+                    alpha: 0.35,
+                };
+            }
+
+            function renderNetworkMap(nexeons) {
+                _canvasNexeons = nexeons;
+                const canvas = document.getElementById("nexeon-canvas");
+                if (!canvas) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const W =
+                    rect.width ||
+                    canvas.parentElement?.getBoundingClientRect().width ||
+                    700;
+                if (W < 10) {
+                    requestAnimationFrame(() => renderNetworkMap(nexeons));
+                    return;
+                }
+
+                const dpr = window.devicePixelRatio || 1;
+                const H = 340;
+                canvas.width = Math.round(W * dpr);
+                canvas.height = Math.round(H * dpr);
+                canvas.style.width = W + "px";
+                canvas.style.height = H + "px";
+
+                const ctx = canvas.getContext("2d");
+                ctx.scale(dpr, dpr);
+
+                _netPositions = buildNetPositions(nexeons.length, W, H);
+                drawNetwork(ctx, nexeons, W, H);
+
+                // Mouse interaction
+                canvas.onmousemove = (e) => {
+                    const r2 = canvas.getBoundingClientRect();
+                    const mx = e.clientX - r2.left,
+                        my = e.clientY - r2.top;
+                    let hovered = null;
+                    _netPositions.forEach((p, i) => {
+                        if (
+                            Math.hypot(mx - p.x, my - p.y) <=
+                            nodeColor(nexeons[i]).r + 8
+                        )
+                            hovered = nexeons[i].id;
+                    });
+                    if (hovered !== _hoveredNex) {
+                        _hoveredNex = hovered;
+                        canvas.style.cursor = hovered ? "pointer" : "default";
+                        drawNetwork(ctx, nexeons, W, H);
+                    }
+                };
+                canvas.onmouseleave = () => {
+                    _hoveredNex = null;
+                    canvas.style.cursor = "default";
+                    drawNetwork(ctx, nexeons, W, H);
+                };
+                canvas.onclick = (e) => {
+                    const r2 = canvas.getBoundingClientRect();
+                    const mx = e.clientX - r2.left,
+                        my = e.clientY - r2.top;
+                    _netPositions.forEach((p, i) => {
+                        const nex = nexeons[i];
+                        if (
+                            nex.unlocked &&
+                            Math.hypot(mx - p.x, my - p.y) <=
+                                nodeColor(nex).r + 10
+                        )
+                            selectNexeon(nex.id);
+                    });
+                };
+            }
+
+            function drawNetwork(ctx, nexeons, W, H) {
+                ctx.clearRect(0, 0, W, H);
+                if (!_netPositions) return;
+
+                ctx.save();
+
+                // Subtle vignette so nodes pop over world map
+                const vignette = ctx.createRadialGradient(
+                    W / 2,
+                    H / 2,
+                    H * 0.2,
+                    W / 2,
+                    H / 2,
+                    H * 0.85,
+                );
+                vignette.addColorStop(0, "rgba(13,17,23,0)");
+                vignette.addColorStop(1, "rgba(13,17,23,0.45)");
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, W, H);
+
+                // ── 1. Draw all sequential edges FIRST (behind nodes) ──────
+                for (let i = 0; i < nexeons.length - 1; i++) {
+                    const a = nexeons[i];
+                    const b = nexeons[i + 1];
+                    const pA = _netPositions[i];
+                    const pB = _netPositions[i + 1];
+                    const lc = lineColor(a, b);
+
+                    // Control point: slight random perpendicular curve
+                    const seed1 = seededRandom(i * 31 + 7);
+                    const seed2 = seededRandom(i * 43 + 11);
+                    const cmx = (pA.x + pB.x) / 2 + (seed1 - 0.5) * 50;
+                    const cmy = (pA.y + pB.y) / 2 + (seed2 - 0.5) * 50;
+
+                    ctx.globalAlpha = lc.alpha;
+                    ctx.beginPath();
+                    ctx.moveTo(pA.x, pA.y);
+                    ctx.quadraticCurveTo(cmx, cmy, pB.x, pB.y);
+                    ctx.strokeStyle = lc.stroke;
+                    ctx.lineWidth = lc.width;
+                    ctx.lineCap = "round";
+                    ctx.setLineDash(lc.dash);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // ── 2. Cross-links every ~4 nodes for network web effect ───
+                for (let i = 0; i < nexeons.length; i += 4) {
+                    if (i + 5 >= nexeons.length) break;
+                    const a = nexeons[i];
+                    const c = nexeons[i + 4];
+                    const pA = _netPositions[i];
+                    const pC = _netPositions[i + 4];
+                    const lc = lineColor(a, c);
+
+                    ctx.globalAlpha = lc.alpha * 0.45;
+                    ctx.beginPath();
+                    ctx.moveTo(pA.x, pA.y);
+                    ctx.lineTo(pC.x, pC.y);
+                    ctx.strokeStyle = lc.stroke;
+                    ctx.lineWidth = lc.width * 0.6;
+                    ctx.setLineDash([3, 8]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // ── 3. Draw edge small junction dots ──────────────────────
+                for (let i = 0; i < nexeons.length - 1; i++) {
+                    const a = nexeons[i];
+                    const pA = _netPositions[i];
+                    const lc = lineColor(a, nexeons[i + 1]);
+                    ctx.globalAlpha = lc.alpha * 0.6;
+                    ctx.beginPath();
+                    ctx.arc(pA.x, pA.y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = lc.stroke;
+                    ctx.fill();
+                }
+
+                // ── 4. Draw nodes ON TOP of lines ─────────────────────────
+                ctx.globalAlpha = 1;
+                nexeons.forEach((nex, i) => {
+                    const p = _netPositions[i];
+                    const nc = nodeColor(nex);
+                    const isHov = _hoveredNex === nex.id;
+                    const r = nc.r * (isHov ? 1.4 : 1);
+
+                    // Glow halo
+                    const grd = ctx.createRadialGradient(
+                        p.x,
+                        p.y,
+                        0,
+                        p.x,
+                        p.y,
+                        r * 3.5,
+                    );
+                    grd.addColorStop(0, nc.glow);
+                    grd.addColorStop(
+                        0.5,
+                        nc.glow.replace(/[\d.]+\)$/, "0.15)"),
+                    );
+                    grd.addColorStop(1, "transparent");
+                    ctx.globalAlpha = 0.9;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, r * 3.5, 0, Math.PI * 2);
+                    ctx.fillStyle = grd;
+                    ctx.fill();
+
+                    // Node body
+                    ctx.globalAlpha = 1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = nc.fill;
+                    ctx.strokeStyle = nc.stroke;
+                    ctx.lineWidth = nex.id === currentNexeon ? 3 : 2;
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Inner dot (completed = white, active = bright blue)
+                    if (nex.completed) {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, r * 0.35, 0, Math.PI * 2);
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fill();
+                    } else if (nex.id === currentNexeon) {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, r * 0.3, 0, Math.PI * 2);
+                        ctx.fillStyle = "#58a6ff";
+                        ctx.fill();
+                    }
+
+                    // Label below node
+                    const label = `N${String(nex.id).padStart(2, "0")}`;
+                    ctx.font = `${isHov ? 9 : 8}px "Share Tech Mono", monospace`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillStyle = nex.completed
+                        ? "#00ff41"
+                        : nex.unlocked
+                          ? "#58a6ff"
+                          : "#cc2200";
+                    ctx.globalAlpha = isHov ? 1 : 0.8;
+                    ctx.fillText(label, p.x, p.y + r + 4);
+
+                    // Tooltip on hover
+                    if (isHov) {
+                        const pct = nex.played > 0 ? nex.pct + "%" : "—";
+                        const tip = nex.unlocked
+                            ? `NEX-${String(nex.id).padStart(2, "0")} · ${nex.wins}W / ${nex.played}P · ${pct}`
+                            : `NEX-${String(nex.id).padStart(2, "0")} · 🔒 LOCKED`;
+                        ctx.font = '10px "Share Tech Mono", monospace';
+                        ctx.textBaseline = "middle";
+                        const tw = ctx.measureText(tip).width + 22;
+                        let tx = p.x - tw / 2,
+                            ty = p.y - r - 28;
+                        if (tx < 4) tx = 4;
+                        if (tx + tw > W - 4) tx = W - tw - 4;
+                        if (ty < 4) ty = p.y + r + 16;
+
+                        ctx.globalAlpha = 0.97;
+                        ctx.fillStyle = "rgba(10,15,20,0.95)";
+                        ctx.strokeStyle = nc.stroke;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.roundRect(tx, ty, tw, 22, 4);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.globalAlpha = 1;
+                        ctx.fillStyle = nc.stroke;
+                        ctx.textAlign = "center";
+                        ctx.fillText(tip, tx + tw / 2, ty + 11);
+                    }
+                    ctx.globalAlpha = 1;
+                });
+
+                ctx.restore();
+            }
+
+            // Re-render on resize
+            window.addEventListener("resize", () => {
+                if (_canvasNexeons.length) {
+                    _netPositions = null;
+                    renderNetworkMap(_canvasNexeons);
+                }
+            });
+
+            function renderNexeonMap(nexeons) {
+                renderNetworkMap(nexeons);
+            }
+
+            function updateInfoBar(nex) {
+                const bar = document.getElementById("nexeon-info-bar");
+                const nameEl = document.getElementById("nib-name");
+                const startBtn = document.getElementById("start-btn");
+
+                if (!nex || !nex.unlocked) {
+                    bar.className = "nexeon-info-bar locked-bar";
+                    nameEl.innerHTML = nex
+                        ? `🔒 NEXEON-${String(nex.id).padStart(2, "0")} LOCKED`
+                        : "NO NEXEON SELECTED";
+                    bar.innerHTML = `<span style="letter-spacing:3px;font-size:11px;" id="nib-name">${nameEl.innerHTML}</span>`;
+                    startBtn.disabled = true;
+                    startBtn.style.opacity = "0.35";
+                    return;
+                }
+                const pct =
+                    nex.played > 0
+                        ? Math.round((100 * nex.wins) / nex.played)
+                        : 0;
+                const needed = Math.ceil(51 * 0.6);
+                bar.className = "nexeon-info-bar";
+                bar.innerHTML = `
+                    <span class="nib-name" style="color:${nex.completed ? "#f5a623" : "var(--green)"}">
+                        ${nex.completed ? "✅" : NEX_ICONS[nex.id - 1] || "⬡"} NEXEON-${String(nex.id).padStart(2, "0")}${nex.completed ? " ✓" : ""}
+                    </span>
+                    <div class="nib-div"></div>
+                    <div class="nib-stat">
+                        <span class="nib-val">${nex.wins}</span>
+                        <span class="nib-lbl">WINS</span>
+                    </div>
+                    <div class="nib-stat">
+                        <span class="nib-val">${nex.played}</span>
+                        <span class="nib-lbl">PLAYED</span>
+                    </div>
+                    <div class="nib-stat">
+                        <span class="nib-val">${51 - nex.played > 0 ? 51 - nex.played : "—"}</span>
+                        <span class="nib-lbl">LEFT</span>
+                    </div>
+                    <div class="nib-div"></div>
+                    <div class="nib-stat">
+                        <span class="nib-val" style="color:${pct >= 60 ? "#f5a623" : "var(--green)"}">${pct}%</span>
+                        <span class="nib-lbl">WIN RATE</span>
+                    </div>
+                    <div class="nib-stat">
+                        <span class="nib-val" style="font-size:11px;color:${pct >= 60 ? "#f5a623" : "var(--muted)"};">${needed} REQ</span>
+                        <span class="nib-lbl">TO UNLOCK NEXT</span>
+                    </div>`;
+                startBtn.disabled = false;
+                startBtn.style.opacity = "1";
+            }
+
+            async function selectNexeon(id) {
+                const res = await api("/nexeon/select", "POST", {
+                    nexeon_id: id,
+                });
+                if (res.error) {
+                    toast(res.error, "err");
+                    return;
+                }
+                currentNexeon = id;
+                // Update map highlight
+                document.querySelectorAll(".nex-node").forEach((n) => {
+                    const hex = n.querySelector(".nex-hex");
+                    if (!hex) return;
+                    const nid = parseInt(n.dataset.nexId);
+                    const nex = nexeonData.find((x) => x.id === nid);
+                    if (!nex) return;
+                    hex.className = "nex-hex state-" + nexState(nex);
+                });
+                // Re-render just the active node
+                renderNexeonMap(nexeonData);
+                updateInfoBar(nexeonData.find((n) => n.id === id));
+            }
+
+            // ── Round functions ──────────────────────────────────────────────
+            async function startRound() {
+                const state = await api("/new_round", "POST");
+                if (state.error) {
+                    toast(state.error, "err");
+                    return;
+                }
+                document.getElementById("home-screen").classList.add("hidden");
+                document
+                    .getElementById("game-screen")
+                    .classList.remove("hidden");
+                resetBotPanel();
+                document.getElementById("corrupted-text").textContent =
+                    state.corrupted;
+                // Store words for word-number display
+                _currentCorruptedWords = (state.corrupted || "")
+                    .split(/\s+/)
+                    .filter(Boolean);
+                document.getElementById("pts-badge").textContent = "+300 PTS";
+                document.getElementById("guess-input").value = "";
+                document.getElementById("guess-input").focus();
+                const lbl = document.getElementById("game-category-label");
+                if (lbl)
+                    lbl.textContent = `NEXEON-${String(currentNexeon).padStart(2, "0")}`;
+                renderDots(0);
+                // Clear hints and reset placeholder
+                const ha = document.getElementById("hints-area");
+                if (ha)
+                    ha.innerHTML =
+                        '<div style="font-size:10px;color:var(--muted);letter-spacing:1px;">Hints unlock after wrong attempts...</div>';
+                updateStats(state.score, state.streak, state.round_num, null);
+            }
+
+            function goHome() {
+                document.getElementById("game-screen").classList.add("hidden");
+                document
+                    .getElementById("result-overlay")
+                    .classList.add("hidden");
+                document.getElementById("hints-area").innerHTML = "";
+                resetBotPanel();
+                document
+                    .getElementById("home-screen")
+                    .classList.remove("hidden");
+                // Refresh map
+                api("/nexeons").then((r) => {
+                    nexeonData = r.nexeons || [];
+                    currentNexeon = r.current || currentNexeon;
+                    updateInfoBar(
+                        nexeonData.find((n) => n.id === currentNexeon),
+                    );
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() =>
+                            renderNexeonMap(nexeonData),
+                        );
+                    });
+                });
+                api("/stats").then((s) =>
+                    updateStats(
+                        s.score,
+                        s.streak,
+                        s.total,
+                        s.win_rate,
+                        s.best_streak,
+                    ),
+                );
+            }
+
+            // ── Show nexeon complete overlay ──────────────────────────────────
+            function showNexeonComplete(nexId, nextId) {
+                const ov = document.createElement("div");
+                ov.className = "nexeon-complete-overlay";
+                ov.innerHTML = `
+                    <div class="nexeon-complete-box">
+                        <h2>⬡ NEXEON-${String(nexId).padStart(2, "0")}<br>COMPLETE</h2>
+                        <p>YOU WON 60%+ OF THIS NEXEON</p>
+                        ${nextId ? `<p style="color:#f5a623;margin-top:8px;">🔓 NEXEON-${String(nextId).padStart(2, "0")} UNLOCKED</p>` : "<p>🏆 ALL NEXEONS COMPLETE</p>"}
+                        <button class="btn" style="margin-top:20px;padding:12px 32px;letter-spacing:3px;"
+                            onclick="this.closest('.nexeon-complete-overlay').remove()">
+                            CONTINUE
+                        </button>
+                    </div>`;
+                document.body.appendChild(ov);
+                setTimeout(() => ov.remove(), 9000);
+            }
+
+            async function submitGuess() {
+                const inp = document.getElementById("guess-input");
+                const guess = inp.value.trim();
+                if (!guess) return;
+
+                const res = await api("/guess", "POST", { guess });
+
+                if (res.result === "correct") {
+                    if (res.nexeon_complete) {
+                        setTimeout(
+                            () =>
+                                showNexeonComplete(
+                                    res.nexeon_id,
+                                    res.next_unlocked
+                                        ? res.nexeon_id + 1
+                                        : null,
+                                ),
+                            600,
+                        );
+                    }
+                    showResult(
+                        true,
+                        res.answer,
+                        res.points,
+                        res.streak,
+                        res.attempts,
+                        0,
+                    );
+                } else if (res.result === "failed") {
+                    showResult(false, res.answer, 0, 0, 5);
+                    renderHints(res.hints || []);
+                } else if (res.result === "wrong") {
+                    const disp = document.getElementById("corrupted-text");
+                    disp.classList.add("shake");
+                    setTimeout(() => disp.classList.remove("shake"), 400);
+                    renderDots(res.attempts);
+                    renderHints(res.hints || []);
+                    document.getElementById("pts-badge").textContent =
+                        `+${res.points_if_correct} PTS`;
+                    toast(
+                        `WRONG — ${res.attempts_left} ATTEMPT${res.attempts_left === 1 ? "" : "S"} LEFT`,
+                        "err",
+                    );
+                    inp.classList.add("wrong-input");
+                    setTimeout(() => inp.classList.remove("wrong-input"), 1500);
+                    inp.select();
+                    inp.focus();
+                }
+            }
+
+            function showResult(win, answer, points, streak, attempts, bonus) {
+                document.getElementById("r-icon").textContent = win
+                    ? "✅"
+                    : "💀";
+                document.getElementById("r-title").textContent = win
+                    ? "DECRYPTED"
+                    : "MISSION FAILED";
+                document.getElementById("r-sub").textContent = win
+                    ? `SOLVED IN ${attempts} ATTEMPT${attempts === 1 ? "" : "S"}  //  STREAK: ${streak} 🔥`
+                    : "ENCRYPTION UNBROKEN — STREAK RESET";
+                document.getElementById("r-answer").textContent = `"${answer}"`;
+                document.getElementById("r-pts").textContent = win
+                    ? `+${points} PTS`
+                    : "0 PTS";
+                document
+                    .getElementById("result-overlay")
+                    .classList.remove("hidden");
+                if (win) {
+                    updateStats(null, streak, null, null);
+                    robotSolved();
+                }
+            }
+
+            function renderDots(attempts) {
+                const container = document.getElementById("attempt-dots");
+                if (!container) return;
+                container.querySelectorAll(".dot").forEach((d, i) => {
+                    d.classList.remove("used", "cur");
+                    if (i < attempts) d.classList.add("used");
+                    else if (i === attempts && attempts < 5)
+                        d.classList.add("cur");
+                });
+            }
+
+            function renderHints(hints) {
+                const el = document.getElementById("hints-area");
+                if (!el) return;
+                hints.forEach((h) => {
+                    if (el.querySelector(`[data-hnum="${h.num}"]`)) return;
+                    const d = document.createElement("div");
+                    d.className = "hint-item";
+                    d.dataset.hnum = h.num;
+                    d.innerHTML = `<span class="hint-num">// HINT ${h.num}</span><span class="hint-text">${h.text}</span>`;
+                    el.appendChild(d);
+                });
+                // Show word numbers once all 3 hints are revealed
+                const shown = el.querySelectorAll(".hint-item").length;
+                maybeShowWordNumbers(shown);
+            }
+
+            function addMsg(role, text, extraClass) {
+                const area = document.getElementById("chat-messages");
+                if (!area) return;
+                const d = document.createElement("div");
+                let cls = "msg " + (role === "user" ? "user" : "bot");
+                if (extraClass) cls += " " + extraClass;
+                d.className = cls;
+                d.innerHTML = role === "bot" ? marked.parse(text) : text;
+                area.appendChild(d);
+                area.scrollTop = area.scrollHeight;
+            }
+
+            // ── Bot widget eye animations ─────────────────────────────────
+            let _botActivated = false;
+
+            function botWakeEyes() {
+                if (_botActivated) return; // stays open when activated
+                document.getElementById("bw-eye-l").textContent = "O";
+                document.getElementById("bw-eye-r").textContent = "O";
+                document.getElementById("bw-eye-l").classList.add("awake");
+                document.getElementById("bw-eye-r").classList.add("awake");
+            }
+            function botSleepEyes() {
+                if (_botActivated) return;
+                document.getElementById("bw-eye-l").textContent = "_";
+                document.getElementById("bw-eye-r").textContent = "_";
+                document.getElementById("bw-eye-l").classList.remove("awake");
+                document.getElementById("bw-eye-r").classList.remove("awake");
+            }
+
+            function toggleBotPopup() {
+                const popup = document.getElementById("bot-popup");
+                if (!popup) return;
+                popup.classList.toggle("minimised");
+                const btn = document.getElementById("bot-popup-min");
+                if (btn)
+                    btn.textContent = popup.classList.contains("minimised")
+                        ? "+"
+                        : "─";
+            }
+
+            async function activateBot() {
+                const res = await api("/chatbot/activate", "POST");
+                if (res.error) {
+                    toast(res.error, "err");
+                    return;
+                }
+
+                _botActivated = true;
+
+                // Widget: eyes stay open green, hide unlock button
+                const widget = document.getElementById("bot-widget");
+                if (widget) widget.classList.add("activated");
+                document.getElementById("bw-eye-l").textContent = "O";
+                document.getElementById("bw-eye-r").textContent = "O";
+                document.getElementById("bw-eye-l").classList.remove("awake");
+                document.getElementById("bw-eye-r").classList.remove("awake");
+                document.getElementById("bw-eye-l").classList.add("activated");
+                document.getElementById("bw-eye-r").classList.add("activated");
+                document.getElementById("bot-widget-label").textContent =
+                    "ACTIVE";
+
+                // Make widget clickable to open popup
+                widget.onclick = () => {
+                    const p = document.getElementById("bot-popup");
+                    if (p) p.classList.toggle("hidden");
+                };
+
+                // Show floating popup
+                const popup = document.getElementById("bot-popup");
+                if (popup) popup.classList.remove("hidden");
+
+                updateStats(res.score, null, null, null);
+                addMsg("bot", res.greeting, "greeting");
+                document.getElementById("chat-input").focus();
+
+                // Show word numbers now that bot is activated
+                showWordNumbers();
+            }
+
+            async function sendChat() {
+                const inp = document.getElementById("chat-input");
+                const msg = inp.value.trim();
+                if (!msg) return;
+                addMsg("user", msg);
+                inp.value = "";
+                const res = await api("/chatbot/chat", "POST", {
+                    message: msg,
+                });
+                if (res.error) {
+                    addMsg("bot", "❌ " + res.error);
+                    return;
+                }
+                addMsg("bot", res.response);
+                const tl = document.getElementById("turns-left");
+                if (tl && res.turns_left !== undefined) {
+                    tl.textContent = res.turns_left + " QUERIES LEFT";
+                    if (res.turns_left <= 2) tl.style.color = "var(--red)";
+                }
+            }
+
+            async function skipRound() {
+                const res = await api("/skip", "POST");
+                if (res.error) {
+                    toast(res.error, "err");
+                    return;
+                }
+
+                // Swap sentence in-place — no result overlay
+                document.getElementById("corrupted-text").textContent =
+                    res.corrupted;
+                document.getElementById("guess-input").value = "";
+                document
+                    .getElementById("guess-input")
+                    .classList.remove("wrong-input");
+                document.getElementById("pts-badge").textContent =
+                    `+${res.points_if_correct} PTS`;
+                document.getElementById("hints-area").innerHTML = "";
+                resetBotPanel();
+                const lbl = document.getElementById("game-category-label");
+                if (lbl)
+                    lbl.textContent = `NEXEON-${String(currentNexeon).padStart(2, "0")}`;
+                renderDots(0);
+                renderHints([]);
+                updateStats(res.score, res.streak, res.round_num, null);
+
+                // Shake the corrupted text briefly to signal new sentence loaded
+                const disp = document.getElementById("corrupted-text");
+                disp.style.opacity = "0";
+                setTimeout(() => {
+                    disp.style.opacity = "1";
+                }, 200);
+
+                const dMsg =
+                    res.deferred_count > 0
+                        ? `⏭ SAVED FOR LATER — ${res.deferred_count} deferred sentence${res.deferred_count > 1 ? "s" : ""}`
+                        : "⏭ SKIPPED";
+                toast(dMsg, "ok");
+                document.getElementById("guess-input").focus();
+            }
+
+            function showHelp() {
+                const existing = document.getElementById("help-overlay");
+                if (existing) {
+                    existing.remove();
+                    return;
+                }
+                const ov = document.createElement("div");
+                ov.id = "help-overlay";
+                ov.className = "overlay";
+                ov.style.zIndex = "150";
+                ov.innerHTML = `
+                    <div style="border:1px solid var(--green);background:var(--dark2);padding:36px 40px;max-width:480px;width:90%;font-family:'Share Tech Mono',monospace;">
+                        <div style="font-size:13px;letter-spacing:4px;color:var(--green);margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">// HOW TO PLAY</div>
+                        <div style="font-size:11px;color:var(--muted);line-height:2;letter-spacing:1px;">
+                            <div>🔐 <b style="color:var(--green)">DECODE</b> the corrupted sentence — 5 attempts</div>
+                            <div>💡 <b style="color:var(--green)">HINTS</b> appear after each wrong attempt</div>
+                            <div>🤖 <b style="color:var(--green)">AI BOT</b> costs 150 pts — 8 queries per round</div>
+                            <div>⏭ <b style="color:var(--green)">SKIP</b> saves sentence for later — served after all others</div>
+                            <div style="margin-top:12px;">📊 <b style="color:var(--green)">SCORING</b></div>
+                            <div style="padding-left:16px;color:rgba(0,255,65,0.6);">
+                                Attempt 1–2 → +300 pts<br>
+                                Attempt 3 → +250 pts<br>
+                                Attempt 4 → +200 pts<br>
+                                Attempt 5 → +150 pts
+                            </div>
+                            <div style="margin-top:12px;">🗺️ <b style="color:var(--green)">NEXEONS</b></div>
+                            <div style="padding-left:16px;color:rgba(0,255,65,0.6);">
+                                Win 60% of 51 sentences to unlock the next nexeon
+                            </div>
+                        </div>
+                        <button class="btn" style="margin-top:24px;padding:10px 32px;letter-spacing:3px;width:100%;"
+                            onclick="document.getElementById('help-overlay').remove()">CLOSE</button>
+                    </div>`;
+                document.body.appendChild(ov);
+            }
+
+            // ── Word numbers display ──────────────────────────────────────
+            let _currentCorruptedWords = [];
+
+            function showWordNumbers() {
+                const wn = document.getElementById("word-numbers");
+                if (!wn) return;
+                wn.innerHTML = "";
+                _currentCorruptedWords.forEach((word, idx) => {
+                    const g = document.createElement("div");
+                    g.className = "word-num-group";
+                    g.innerHTML = `<span class="word-num-word">${word}</span><span class="word-num-idx">${idx + 1}</span>`;
+                    wn.appendChild(g);
+                });
+                wn.classList.remove("hidden");
+            }
+
+            function maybeShowWordNumbers(hintsCount) {
+                // Show after 3 hints revealed (unless bot already activated)
+                if (hintsCount >= 3 || _botActivated) showWordNumbers();
+            }
+
+            // ── Robot silhouette state ────────────────────────────────────
+            function robotSolved() {
+                const pre = document.getElementById("robot-pre");
+                const lbl = document.getElementById("robot-label");
+                const eyeL = document.getElementById("eye-l");
+                const eyeR = document.getElementById("eye-r");
+                const mouth = document.getElementById("robot-mouth");
+                if (pre) pre.classList.add("solved");
+                if (lbl) lbl.classList.add("solved");
+                if (eyeL) {
+                    eyeL.classList.add("solved");
+                    eyeL.textContent = "O";
+                }
+                if (eyeR) {
+                    eyeR.classList.add("solved");
+                    eyeR.textContent = "O";
+                }
+                if (mouth) mouth.textContent = "^^^";
+            }
+
+            function robotReset() {
+                const pre = document.getElementById("robot-pre");
+                const lbl = document.getElementById("robot-label");
+                const eyeL = document.getElementById("eye-l");
+                const eyeR = document.getElementById("eye-r");
+                const mouth = document.getElementById("robot-mouth");
+                if (pre) pre.classList.remove("solved");
+                if (lbl) lbl.classList.remove("solved");
+                if (eyeL) {
+                    eyeL.classList.remove("solved");
+                    eyeL.textContent = "_";
+                }
+                if (eyeR) {
+                    eyeR.classList.remove("solved");
+                    eyeR.textContent = "_";
+                }
+                if (mouth) mouth.textContent = "───";
+            }
+
+            function resetBotPanel() {
+                // Reset popup
+                const popup = document.getElementById("bot-popup");
+                if (popup) {
+                    popup.classList.add("hidden");
+                    popup.classList.remove("minimised");
+                }
+                // Reset widget
+                const widget = document.getElementById("bot-widget");
+                if (widget) {
+                    widget.classList.remove("activated");
+                    widget.onclick = null;
+                }
+                const bwl = document.getElementById("bw-eye-l");
+                const bwr = document.getElementById("bw-eye-r");
+                if (bwl) {
+                    bwl.textContent = "_";
+                    bwl.className = "bot-w-eye";
+                }
+                if (bwr) {
+                    bwr.textContent = "_";
+                    bwr.className = "bot-w-eye";
+                }
+                const lbl = document.getElementById("bot-widget-label");
+                if (lbl) lbl.textContent = "AI BOT";
+                const cost = document.getElementById("bot-widget-cost");
+                if (cost) cost.style.display = "";
+                const btn = document.getElementById("btn-bot");
+                if (btn) {
+                    btn.style.display = "";
+                    btn.onclick = activateBot;
+                }
+
+                const msgs = document.getElementById("chat-messages");
+                if (msgs) msgs.innerHTML = "";
+                const tl = document.getElementById("turns-left");
+                if (tl) {
+                    tl.textContent = "8 QUERIES LEFT";
+                    tl.style.color = "";
+                }
+
+                _botActivated = false;
+
+                // Hide word numbers
+                const wn = document.getElementById("word-numbers");
+                if (wn) {
+                    wn.classList.add("hidden");
+                    wn.innerHTML = "";
+                }
+                _currentCorruptedWords = [];
+                robotReset();
+            }
+
+            function nextRound() {
+                document
+                    .getElementById("result-overlay")
+                    .classList.add("hidden");
+                document.getElementById("hints-area").innerHTML = "";
+                resetBotPanel();
+                startRound();
+            }
+
+            function menuFromResult() {
+                document
+                    .getElementById("result-overlay")
+                    .classList.add("hidden");
+                document.getElementById("hints-area").innerHTML = "";
+                resetBotPanel();
+                goHome();
+            }
+
+            // ── Progress management ──────────────────────────────────────────
+            async function saveProgress() {
+                const s = await api("/save_progress", "POST", {});
+                const el = document.getElementById("save-status");
+                el.textContent = s.saved ? "✔ SAVED" : "❌ SAVE FAILED";
+                el.style.color = s.saved ? "var(--green)" : "var(--red)";
+                setTimeout(() => {
+                    el.textContent = "";
+                }, 3000);
+            }
+
+            async function exportProgress() {
+                const p = await api("/load_progress", "POST", {});
+                const blob = new Blob([JSON.stringify(p, null, 2)], {
+                    type: "application/json",
+                });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "decorrode_save.json";
+                a.click();
+            }
+
+            async function importProgress(evt) {
+                const file = evt.target.files[0];
+                if (!file) return;
+                try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
+                    await api("/load_progress", "POST", data);
+                    const el = document.getElementById("save-status");
+                    el.textContent = "✔ IMPORTED  //  " + file.name;
+                    el.style.color = "var(--blue)";
+                    toast("PROGRESS IMPORTED", "ok");
+                    init();
+                } catch (err) {
+                    toast("IMPORT FAILED: " + err.message, "err");
+                }
+            }
+
+            async function resetProgress() {
+                if (!confirm("Reset ALL progress? This cannot be undone."))
+                    return;
+                await api("/reset_progress", "POST");
+                toast("PROGRESS RESET", "err");
+                init();
+            }
+
+            // ── Init ─────────────────────────────────────────────────────────
+            async function init() {
+                const [stats, nexRes] = await Promise.all([
+                    api("/stats"),
+                    api("/nexeons"),
+                ]);
+                updateStats(
+                    stats.score || 0,
+                    stats.streak || 0,
+                    stats.total || 0,
+                    stats.win_rate || "—",
+                    stats.best_streak || 0,
+                );
+                nexeonData = nexRes.nexeons || [];
+                currentNexeon = stats.current_nexeon || 1;
+                updateInfoBar(nexeonData.find((n) => n.id === currentNexeon));
+                // Defer canvas render until DOM is fully painted
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => renderNexeonMap(nexeonData));
+                });
+            }
+            init();
+        </script>
+    </body>
+</html>

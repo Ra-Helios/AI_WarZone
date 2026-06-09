@@ -1,0 +1,25 @@
+# Python
+training_files/game1/__pycache__/
+training_files/game2/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+.env/
+
+# VS Code
+.vscode/
+
+# User-generated data
+data/player_progress.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Others
+DoX/
+intro.mp4
